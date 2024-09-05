@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">GoodFoodApp</string>
+    <string name="sign_up_title">Sign Up!</string>
+    <string name="sign_up_msg">Create your account</string>
+    <string name="email_txt">Email</string>
+    <string name="name_txt">Name</string>
+    <string name="password_txt">Password</string>
+    <string name="repeat_password_txt">Repeat Password</string>
+    <string name="btn_sign_up_txt">Sign Up</string>
+    <string name="switch_to_login_msg">Already have an account? Login</string>
+    <string name="logo_description">logo</string>
 </resources>
