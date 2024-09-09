@@ -1,0 +1,125 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <!-- Logo at the top left corner -->
+    <ImageView
+        android:id="@+id/logoImageView"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginTop="56dp"
+        android:contentDescription="@string/logo_description"
+        android:src="@drawable/ic_goodfood_logo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.108"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Title "My Profile" at the center -->
+    <TextView
+        android:id="@+id/title_profile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="My Profile"
+        android:textSize="24sp"
+        android:fontFamily="sans-serif-light"
+        android:textColor="@color/black"/>
+
+    <!-- Profile Image -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="24dp">
+
+        <!-- Placeholder or User Image -->
+        <ImageView
+            android:id="@+id/profile_image"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_default_user_profile"
+            android:scaleType="centerCrop"
+            android:background="@drawable/circle_shape"/>
+
+        <!-- Camera Icon for changing profile image -->
+        <ImageView
+            android:id="@+id/change_picture_icon"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignRight="@id/profile_image"
+            android:layout_alignBottom="@id/profile_image"
+            android:layout_marginRight="-3dp"
+            android:layout_marginBottom="-1dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_camera" />
+    </RelativeLayout>
+
+    <!-- Name and Email fields -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp">
+
+        <EditText
+            android:id="@+id/name_edit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:layout_marginTop="16dp"
+            android:hint="Name"/>
+
+        <ImageView
+            android:id="@+id/edit_name_icon"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="16dp"
+            android:src="@drawable/ic_pencil_edit"/>
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/email_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Your Email"
+        android:focusable="false"
+        android:clickable="false"
+        android:layout_marginTop="32dp"/>
+
+    <!-- Buttons Save and Discard -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="48dp">
+
+
+        <Button
+            android:id="@+id/btn_save_changes"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Save Changes"
+            android:backgroundTint="#59A400"
+            android:layout_marginRight="8dp"
+            android:textColor="@android:color/white"/>
+
+
+        <Button
+            android:id="@+id/btn_discard_changes"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Discard Changes"
+            android:layout_marginLeft="8dp"
+            android:backgroundTint="#F3AE00"
+            android:textColor="@android:color/white"/>
+    </LinearLayout>
+</LinearLayout>
