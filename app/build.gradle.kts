@@ -63,7 +63,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
     implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore-ktx")
 //    implementation("androidx.legacy:legacy-support-v4:1.0.0")
 //    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
 //    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
