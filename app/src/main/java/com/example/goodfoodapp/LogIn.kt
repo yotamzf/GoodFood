@@ -1,14 +1,16 @@
 package com.example.goodfoodapp
 
-import androidx.fragment.app.viewModels
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.fragment.app.Fragment
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginFragment : Fragment() {
+
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -22,20 +24,22 @@ class LoginFragment : Fragment() {
         val loginButton = view.findViewById<Button>(R.id.btnLogin)
         val signUpTextView = view.findViewById<TextView>(R.id.tvSignUpPrompt)
 
-        // Handle Login Button Click (you can add Firebase authentication logic here)
+        // Initialize Firebase Auth
+        auth = FirebaseAuth.getInstance()
+
+        // Handle Login Button Click
         loginButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
             val password = passwordEditText.text.toString().trim()
 
             if (email.isNotEmpty() && password.isNotEmpty()) {
-                // Add logic to authenticate user (e.g., with Firebase)
-                // loginWithFirebase(email, password)
+                loginWithFirebase(email, password)
             } else {
                 Toast.makeText(context, "Please enter email and password", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Handle Sign Up Prompt (navigate to sign up screen)
+        // Handle Sign Up Prompt (navigate to sign-up screen)
         signUpTextView.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, SignUp())
@@ -46,8 +50,20 @@ class LoginFragment : Fragment() {
         return view
     }
 
-    // Example function to handle Firebase Authentication (you need to implement this)
     private fun loginWithFirebase(email: String, password: String) {
-        // Firebase login logic goes here
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Login successful
+                    Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
+
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, SignUp()) // Replace HomeFragment with your main screen
+                        .commit()
+                } else {
+                    // Login failed
+                    Toast.makeText(context, "Email or password are incorrect", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 }

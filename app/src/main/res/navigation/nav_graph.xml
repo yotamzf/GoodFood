@@ -1,91 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<navigation>
-<!--    xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
-<!--    xmlns:tools="http://schemas.android.com/tools"-->
-<!--    android:id="@+id/nav_graph"-->
-<!--    app:startDestination="@id/LogIn">-->
-<!--    <action-->
-<!--        android:id="@+id/any_page_to_my_reviews"-->
-<!--        app:destination="@id/feedFragment"-->
-<!--        app:popUpTo="@id/moviesFragment"-->
-<!--        app:popUpToInclusive="false" />-->
-<!--    <fragment-->
-<!--        android:id="@+id/loginFragment"-->
-<!--        android:name="com.example.goodfoodapp.LoginFragment"-->
-<!--        android:label="LogIn"-->
-<!--        tools:layout="@layout/fragment_log_in">-->
-<!--        <action-->
-<!--            android:id="@+id/login_to_register"-->
-<!--            app:destination="@id/registerFragment"-->
-<!--            app:popUpTo="@id/loginFragment"-->
-<!--            app:popUpToInclusive="false" />-->
-<!--        <action-->
-<!--            android:id="@+id/action_loginFragment_to_feedFragment"-->
-<!--            app:destination="@id/feedFragment"-->
-<!--            app:popUpTo="@id/loginFragment"-->
-<!--            app:popUpToInclusive="false"/>-->
-<!--    </fragment>-->
-<!--    <fragment-->
-<!--        android:id="@+id/registerFragment"-->
-<!--        android:name="com.example.goodfoodapp.SignUp"-->
-<!--        android:label="RegisterFragment"-->
-<!--        tools:layout="@layout/fragment_sign_up">-->
-<!--        <action-->
-<!--            android:id="@+id/register_to_login"-->
-<!--            app:destination="@id/loginFragment"-->
-<!--            app:popUpTo="@id/registerFragment"-->
-<!--            app:popUpToInclusive="false" />-->
-<!--        <action-->
-<!--            android:id="@+id/action_registerFragment_to_feedFragment"-->
-<!--            app:destination="@id/feedFragment" />-->
-<!--    </fragment>-->
-<!--    <fragment-->
-<!--        android:id="@+id/profileFragment"-->
-<!--        android:name="com.example.myapplication.ui.authScreens.profile.Profile"-->
-<!--        android:label="@string/profileFragment"-->
-<!--        tools:layout="@layout/fragment_profile" />-->
-<!--    <fragment-->
-<!--        android:id="@+id/moviesFragment"-->
-<!--        android:name="com.example.myapplication.ui.authScreens.movies.MoviesFragment"-->
-<!--        android:label="@string/moviesFragment"-->
-<!--        tools:layout="@layout/fragment_movies">-->
-<!--        <action-->
-<!--            android:id="@+id/action_moviesFragment_to_addNewReviewFragment"-->
-<!--            app:destination="@id/addNewReviewFragment"-->
-<!--            app:popUpTo="@id/moviesFragment"-->
-<!--            app:popUpToInclusive="false" />-->
-<!--    </fragment>-->
-<!--    <fragment-->
-<!--        android:id="@+id/feedFragment"-->
-<!--        android:name="com.example.myapplication.ui.authScreens.feed.Feed"-->
-<!--        android:label="Feed Fragment"-->
-<!--        tools:layout="@layout/fragment_feed">-->
-<!--        <argument-->
-<!--            android:name="isMyFeed"-->
-<!--            android:defaultValue="false"-->
-<!--            app:argType="boolean" />-->
-<!--        <action-->
-<!--            android:id="@+id/action_feedFragment_to_addNewReviewFragment"-->
-<!--            app:destination="@id/addNewReviewFragment"-->
-<!--            app:popUpTo="@id/feedFragment"-->
-<!--            app:popUpToInclusive="false" />-->
-<!--    </fragment>-->
-<!--    <fragment-->
-<!--        android:id="@+id/addNewReviewFragment"-->
-<!--        android:name="com.example.myapplication.ui.authScreens.addNewReview.AddNewReview"-->
-<!--        android:label="Add New Review"-->
-<!--        tools:layout="@layout/fragment_add_new_review">-->
-<!--        <argument-->
-<!--            android:name="movieId"-->
-<!--            app:argType="integer" />-->
-<!--        <argument-->
-<!--            android:name="reviewId"-->
-<!--            app:argType="string" />-->
-<!--        <action-->
-<!--            android:id="@+id/action_addNewReviewFragment_to_feedFragment"-->
-<!--            app:destination="@id/feedFragment"-->
-<!--            app:popUpTo="@id/addNewReviewFragment"-->
-<!--            app:popUpToInclusive="false" />-->
-<!--    </fragment>-->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.goodfoodapp.LoginFragment"
+        tools:layout="@layout/fragment_log_in">
+        <action
+            android:id="@+id/action_signUpFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/signUpFragment"
+        android:name="com.example.goodfoodapp.SignUp"
+        android:label="Register"
+        tools:layout="@layout/fragment_sign_up" />
+
 </navigation>

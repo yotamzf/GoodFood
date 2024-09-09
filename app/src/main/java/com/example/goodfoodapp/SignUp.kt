@@ -7,11 +7,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.navigation.Navigation
 import com.google.firebase.auth.FirebaseAuth
+import com.example.goodfoodapp.utils.Validator
 
 class SignUp : Fragment() {
 
     private lateinit var auth: FirebaseAuth
+    private val validator = Validator()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -33,35 +36,37 @@ class SignUp : Fragment() {
         // Handle Sign Up button click
         signUpButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
+            val name = nameEditText.text.toString().trim()
             val password = passwordEditText.text.toString().trim()
             val repeatPassword = repeatPasswordEditText.text.toString().trim()
 
-            if (validateForm(email, password, repeatPassword)) {
+            if (validateForm(email, name, password, repeatPassword)) {
                 signUpUser(email, password)
             }
         }
 
-        // Handle Login Text Click to navigate back to Login Fragment
         loginTextView.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, LoginFragment())
-                .addToBackStack(null)
-                .commit()
+            Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
         }
 
         return view
     }
 
-    private fun validateForm(email: String, password: String, repeatPassword: String): Boolean {
-        if (email.isEmpty()) {
-            Toast.makeText(context, "Please enter an email", Toast.LENGTH_SHORT).show()
+    private fun validateForm(email: String, name: String, password: String, repeatPassword: String): Boolean {
+        // Use the Validator utility for validation
+        if (!validator.validateEmail(email)) {
+            Toast.makeText(context, "Please enter a valid email", Toast.LENGTH_SHORT).show()
             return false
         }
-        if (password.isEmpty()) {
-            Toast.makeText(context, "Please enter a password", Toast.LENGTH_SHORT).show()
+        if (!validator.validateName(name)) {
+            Toast.makeText(context, "Please enter a valid name", Toast.LENGTH_SHORT).show()
             return false
         }
-        if (password != repeatPassword) {
+        if (!validator.validatePassword(password)) {
+            Toast.makeText(context, "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number", Toast.LENGTH_LONG).show()
+            return false
+        }
+        if (!validator.validateConfirmPassword(password, repeatPassword)) {
             Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
             return false
         }
@@ -76,7 +81,7 @@ class SignUp : Fragment() {
                     Toast.makeText(context, "Sign Up Successful!", Toast.LENGTH_SHORT).show()
 
                     parentFragmentManager.beginTransaction()
-//                        .replace(R.id.fragment_container, ProfileFragment())
+                        .replace(R.id.fragment_container, LoginFragment())
                         .addToBackStack(null)
                         .commit()
                 } else {
