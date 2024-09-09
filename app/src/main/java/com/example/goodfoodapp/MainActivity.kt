@@ -2,6 +2,7 @@ package com.example.goodfoodapp
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.fragment.NavHostFragment
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
@@ -10,16 +11,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Find the NavHostFragment and get the NavController from it
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+
         // Check if the user is logged in
         if (FirebaseAuth.getInstance().currentUser != null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, SignUp()) // Replace with your HomeFragment or main screen
-                .commit()
+            navController.navigate(R.id.signUpFragment)
         } else {
-            // If not logged in, navigate to the LoginFragment
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, LoginFragment())
-                .commit()
+            navController.navigate(R.id.loginFragment)
         }
     }
 }

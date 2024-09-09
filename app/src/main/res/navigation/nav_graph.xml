@@ -5,18 +5,23 @@
     app:startDestination="@id/loginFragment">
 
     <fragment
-        android:id="@+id/loginFragment"
-        android:name="com.example.goodfoodapp.LoginFragment"
-        tools:layout="@layout/fragment_log_in">
+        android:id="@+id/signUpFragment"
+        android:name="com.example.goodfoodapp.SignUp"
+        android:label="Sign Up">
         <action
             android:id="@+id/action_signUpFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
+
     </fragment>
 
     <fragment
-        android:id="@+id/signUpFragment"
-        android:name="com.example.goodfoodapp.SignUp"
-        android:label="Register"
-        tools:layout="@layout/fragment_sign_up" />
+        android:id="@+id/loginFragment"
+        android:name="com.example.goodfoodapp.LoginFragment"
+        android:label="Log In">
+        <action
+            android:id="@+id/action_loginFragment_to_signup_fragment"
+            app:destination="@id/signUpFragment"
+            />
+    </fragment>
 
 </navigation>
