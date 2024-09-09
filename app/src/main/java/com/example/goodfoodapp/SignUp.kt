@@ -41,7 +41,7 @@ class SignUp : Fragment() {
             val repeatPassword = repeatPasswordEditText.text.toString().trim()
 
             if (validateForm(email, name, password, repeatPassword)) {
-                signUpUser(email, password)
+                signUpUser(email, password, view)
             }
         }
 
@@ -73,17 +73,14 @@ class SignUp : Fragment() {
         return true
     }
 
-    private fun signUpUser(email: String, password: String) {
+    private fun signUpUser(email: String, password: String,view: View) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Sign up success, navigate to Profile or main app screen
                     Toast.makeText(context, "Sign Up Successful!", Toast.LENGTH_SHORT).show()
 
-                    parentFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container, LoginFragment())
-                        .addToBackStack(null)
-                        .commit()
+                    Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
                 } else {
                     // If sign-up fails, display a message to the user.
                     Toast.makeText(context, "Sign Up Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
