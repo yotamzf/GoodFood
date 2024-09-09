@@ -1,15 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/green_background"
+   >
 
-    <TextView
-        android:id="@+id/tvMyRecipes"
-        android:layout_width="wrap_content"
+    <!-- Header Layout -->
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="My Recipes"
-        android:textSize="24sp"
-        android:layout_gravity="center"
-        android:textAlignment="center" />
-</FrameLayout>
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_goodfood_logo"
+        />
+
+        <TextView
+            android:id="@+id/tvHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="99dp"
+            android:layout_toRightOf="@id/ivLogo"
+            android:text="My Recipes"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- RecyclerView for displaying recipes -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvRecipes"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false" />
+
+    <!-- Bottom Navigation Bar -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/windowBackground"
+        app:menu="@menu/bottom_navigation_menu" />
+</LinearLayout>
