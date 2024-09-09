@@ -7,6 +7,6 @@ data class User(
     @PrimaryKey val userId: String,
     val email: String,
     val name: String,
-    val profilePic: String,
-    val signupDate: Long
+    val profilePic: String,  // Profile picture URL
+    val signupDate: Long     // Timestamp in milliseconds
 )
