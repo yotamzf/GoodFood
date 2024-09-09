@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Solid fill color for the item background -->
+    <solid android:color="@android:color/white" />
+
+    <!-- Corner radius to make rounded corners -->
+    <corners android:radius="8dp" />
+
+</shape>
