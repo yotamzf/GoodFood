@@ -67,7 +67,7 @@ class LoginFragment : Fragment() {
                 if (task.isSuccessful) {
                     // Login successful
                     Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
-                    Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
+                    Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_myRecipesFragment)
                 } else {
                     // Login failed
                     Toast.makeText(context, "Email or password are incorrect", Toast.LENGTH_SHORT).show()
