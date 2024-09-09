@@ -2,6 +2,8 @@ package com.example.goodfoodapp
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
@@ -10,16 +12,26 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Check if the user is logged in
+        // Fetch NavHostFragment and set up the NavController
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.fragment_container) as NavHostFragment
+        val navController = navHostFragment.navController
+
+        // Check if the user is logged in and navigate accordingly
         if (FirebaseAuth.getInstance().currentUser != null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, SignUp()) // Replace with your HomeFragment or main screen
-                .commit()
+            navController.navigate(R.id.signUpFragment)
         } else {
-            // If not logged in, navigate to the LoginFragment
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, LoginFragment())
-                .commit()
+            navController.navigate(R.id.loginFragment)
         }
+
+        // If you are using the ActionBar, setup it with NavController
+        setupActionBarWithNavController(navController)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.fragment_container) as NavHostFragment
+        val navController = navHostFragment.navController
+        return navController.navigateUp() || super.onSupportNavigateUp()
     }
 }

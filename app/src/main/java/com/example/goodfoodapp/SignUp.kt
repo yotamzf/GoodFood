@@ -1,6 +1,5 @@
 package com.example.goodfoodapp
 
-import androidx.fragment.app.viewModels
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -20,10 +19,8 @@ class SignUp : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_sign_up, container, false)
 
-        // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
 
         val emailEditText = view.findViewById<EditText>(R.id.etEmail)
@@ -33,7 +30,6 @@ class SignUp : Fragment() {
         val signUpButton = view.findViewById<Button>(R.id.btnSignUp)
         val loginTextView = view.findViewById<TextView>(R.id.tvLogin)
 
-        // Handle Sign Up button click
         signUpButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
             val name = nameEditText.text.toString().trim()
@@ -53,7 +49,6 @@ class SignUp : Fragment() {
     }
 
     private fun validateForm(email: String, name: String, password: String, repeatPassword: String): Boolean {
-        // Use the Validator utility for validation
         if (!validator.validateEmail(email)) {
             Toast.makeText(context, "Please enter a valid email", Toast.LENGTH_SHORT).show()
             return false
@@ -73,16 +68,13 @@ class SignUp : Fragment() {
         return true
     }
 
-    private fun signUpUser(email: String, password: String,view: View) {
+    private fun signUpUser(email: String, password: String, view: View) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Sign up success, navigate to Profile or main app screen
                     Toast.makeText(context, "Sign Up Successful!", Toast.LENGTH_SHORT).show()
-
-                    Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
+                    Navigation.findNavController(view).navigate(R.id.loginFragment)
                 } else {
-                    // If sign-up fails, display a message to the user.
                     Toast.makeText(context, "Sign Up Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
