@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- Header Layout with Search Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:orientation="horizontal"
+        >
+
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_goodfood_logo"
+            android:layout_marginRight="16dp"/>
+
+
+        <!-- Search Button -->
+        <AbsoluteLayout
+            android:layout_width="300dp"
+            android:layout_height="39dp">
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="278dp"
+                android:layout_weight="1"
+                android:layout_x="0dp"
+                android:layout_y="0dp"
+                android:background="@drawable/search_background"
+                android:hint="Search"
+                android:padding="8dp" />
+
+            <ImageButton
+                android:id="@+id/btnSearch"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_x="262dp"
+                android:layout_y="7dp"
+                android:background="?attr/selectableItemBackground"
+                android:contentDescription="@string/search"
+                android:src="@drawable/ic_search" />
+        </AbsoluteLayout>
+    </LinearLayout>
+
+    <!-- RecyclerView for displaying search results -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSearchResults"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false" />
+
+</LinearLayout>

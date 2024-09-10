@@ -59,5 +59,10 @@
         android:name="com.example.goodfoodapp.profile.MyProfileFragment"
         android:label="My Profile">
     </fragment>
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.example.goodfoodapp.search.SearchFragment"
+        android:label="Search">
+    </fragment>
 
 </navigation>
