@@ -24,10 +24,16 @@ class UserRepository(private val userDao: UserDao, private val db: FirebaseFires
         }
     }
 
-    // Insert user into Firestore
-    fun insertUser(user: User) {
+    // Insert or update user in Firestore
+    fun insertUser(user: User, onSuccess: () -> Unit, onFailure: () -> Unit) {
         val userDoc = db.collection("users").document(user.userId)
         userDoc.set(user)
+            .addOnSuccessListener {
+                onSuccess() // Call onSuccess when Firestore update succeeds
+            }
+            .addOnFailureListener {
+                onFailure() // Call onFailure when Firestore update fails
+            }
     }
 
     // Get user by ID from Room (local database)
@@ -78,5 +84,19 @@ class UserRepository(private val userDao: UserDao, private val db: FirebaseFires
                 // Handle image preparation if needed
             }
         })
+    }
+
+    // Insert or update the user in both Room and Firestore
+    suspend fun updateUser(user: User, onSuccess: () -> Unit, onFailure: () -> Unit) {
+        try {
+            // Save to Room (local database)
+            insertUserLocally(user)
+
+            // Save to Firestore (remote database)
+            insertUser(user, onSuccess, onFailure)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            onFailure() // Handle failure if something goes wrong
+        }
     }
 }

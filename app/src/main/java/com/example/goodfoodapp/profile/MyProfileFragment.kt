@@ -184,7 +184,7 @@ class MyProfileFragment : Fragment() {
     }
 
     private fun checkForChanges() {
-        val updatedName = binding.nameEdit.text.toString()
+        val updatedName = binding.nameEdit.text.toString().trim()  // Trim to avoid extra spaces
         val currentImageUri = profileImageUri?.toString() ?: originalProfileImageUri?.toString()
 
         // Enable buttons if either the name or profile picture has changed
@@ -199,38 +199,48 @@ class MyProfileFragment : Fragment() {
     }
 
     private fun saveUserData(uid: String) {
-        val updatedName = binding.nameEdit.text.toString()
+        val updatedName = binding.nameEdit.text.toString().trim()  // Get updated name
 
-        // Cache the profile image locally
+        // If profile image is changed, cache it locally
         profileImageUri?.let { uri ->
             userRepository.cacheImageLocally(requireContext(), uri) { localImagePath ->
-                // Save the user with the local image path
-                val user = User(
+                val updatedUser = User(
                     userId = uid,
                     email = binding.emailEdit.text.toString(),
                     name = updatedName,
-                    profilePic = localImagePath,  // Save the cached image path locally
-                    signupDate = originalUser?.signupDate ?: System.currentTimeMillis()  // Keep the original sign-up date
+                    profilePic = localImagePath,
+                    signupDate = originalUser?.signupDate ?: System.currentTimeMillis()
                 )
-
-                // Update the user in Firestore
-                FirebaseFirestore.getInstance().collection("users").document(uid)
-                    .set(user)
-                    .addOnSuccessListener {
-                        showMessage("Changes saved successfully.")
-                    }
-                    .addOnFailureListener {
-                        showMessage("Failed to save changes.")
-                    }
-
-                // Save locally (Room)
-                CoroutineScope(Dispatchers.IO).launch {
-                    userRepository.insertUserLocally(user)
-                }
-
-                // Disable buttons after save
-                disableButtons()
+                saveUserToDbAndFirestore(updatedUser)
             }
+        } ?: run {
+            // If profile image is not changed, just update the name and use the old profile pic path
+            val updatedUser = User(
+                userId = uid,
+                email = binding.emailEdit.text.toString(),
+                name = updatedName,
+                profilePic = originalProfileImageUri?.toString() ?: "",
+                signupDate = originalUser?.signupDate ?: System.currentTimeMillis()
+            )
+            saveUserToDbAndFirestore(updatedUser)
+        }
+    }
+
+    private fun saveUserToDbAndFirestore(user: User) {
+        CoroutineScope(Dispatchers.IO).launch {
+            userRepository.updateUser(user, onSuccess = {
+                // Update the originalUser object to reflect the new data
+                originalUser = user  // This ensures that the next time checkForChanges() is called, it will compare against the new saved state
+
+                requireActivity().runOnUiThread {
+                    showMessage("Changes saved successfully.")
+                    disableButtons() // Disable buttons after save
+                }
+            }, onFailure = {
+                requireActivity().runOnUiThread {
+                    showMessage("Failed to save changes.")
+                }
+            })
         }
     }
 
