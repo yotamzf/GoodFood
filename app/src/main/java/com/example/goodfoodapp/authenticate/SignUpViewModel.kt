@@ -1,4 +1,4 @@
-package com.example.goodfoodapp
+package com.example.goodfoodapp.authenticate
 
 import androidx.lifecycle.ViewModel
 

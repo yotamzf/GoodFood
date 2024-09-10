@@ -1,4 +1,4 @@
-package com.example.goodfoodapp
+package com.example.goodfoodapp.authenticate
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.navigation.Navigation
+import com.example.goodfoodapp.R
 import com.example.goodfoodapp.models.User
 import com.example.goodfoodapp.dal.room.AppDatabase
 import com.example.goodfoodapp.dal.repositories.UserRepository

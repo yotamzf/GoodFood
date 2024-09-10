@@ -1,4 +1,4 @@
-package com.example.goodfoodapp
+package com.example.goodfoodapp.authenticate
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,6 +13,7 @@ import androidx.navigation.Navigation
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.lifecycle.lifecycleScope
+import com.example.goodfoodapp.R
 import com.example.goodfoodapp.models.User
 import com.example.goodfoodapp.dal.repositories.UserRepository
 import com.example.goodfoodapp.dal.room.AppDatabase
