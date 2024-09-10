@@ -48,8 +48,20 @@ class LoginFragment : Fragment() {
             val email = emailEditText.text.toString().trim()
             val password = passwordEditText.text.toString().trim()
 
+            // Check if email or password is empty
+            if (email.isEmpty()) {
+                emailEditText.error = "Email is required"
+                return@setOnClickListener
+            }
+
+            if (password.isEmpty()) {
+                passwordEditText.error = "Password is required"
+                return@setOnClickListener
+            }
+
             loginWithFirebase(email, password, view)
         }
+
 
         // Handle Sign Up Prompt (navigate to sign-up screen)
         signUpTextView.setOnClickListener {
