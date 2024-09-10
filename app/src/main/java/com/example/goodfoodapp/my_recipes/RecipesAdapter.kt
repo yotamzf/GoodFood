@@ -4,12 +4,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.models.Recipe
+import com.squareup.picasso.Picasso
 
 class RecipesAdapter(
     private val onDeleteClick: (Recipe) -> Unit,
@@ -29,11 +31,28 @@ class RecipesAdapter(
     class RecipeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(recipe: Recipe, onDeleteClick: (Recipe) -> Unit, onEditClick: (Recipe) -> Unit) {
             // Bind data to the views
-            val titleTextView = itemView.findViewById<TextView>(R.id.tvRecipeTitle)
+            val recipeImage = itemView.findViewById<ImageView>(R.id.ivRecipeImage)
+            val recipeTitle = itemView.findViewById<TextView>(R.id.tvRecipeTitle)
+            val recipeAuthor = itemView.findViewById<TextView>(R.id.tvRecipeAuthor) // Add this line
             val editButton = itemView.findViewById<ImageButton>(R.id.btnEdit)
             val deleteButton = itemView.findViewById<ImageButton>(R.id.btnDelete)
 
-            titleTextView.text = recipe.title
+            // Use Picasso to load the image
+            if (!recipe.picture.isNullOrEmpty()) {
+                Picasso.get()
+                    .load(recipe.picture) // Load the image if the URL is valid
+                    .placeholder(R.drawable.ic_recipe_placeholder) // Optional: placeholder while loading
+                    .error(R.drawable.ic_recipe_placeholder) // Optional: image on loading error
+                    .into(recipeImage)
+            } else {
+                // Load a placeholder or error image if the URL is empty or null
+                Picasso.get()
+                    .load(R.drawable.ic_recipe_placeholder) // Placeholder image
+                    .into(recipeImage)
+            }
+            recipeTitle.text = recipe.title
+            recipeAuthor.text = recipe.userId
+
             editButton.setOnClickListener { onEditClick(recipe) }
             deleteButton.setOnClickListener { onDeleteClick(recipe) }
         }
