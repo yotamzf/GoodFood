@@ -36,12 +36,9 @@ class MyProfileFragment : Fragment() {
     private lateinit var userRepository: UserRepository
     private var profileImageUri: Uri? = null
     private var originalProfileImageUri: Uri? = null  // Store original image URI
-
-    // Variable to track whether the name is editable
+    private var originalUser: User? = null  // Store original user data to compare
     private var isEditingName = false
     private lateinit var imagePickerLauncher: ActivityResultLauncher<Intent>
-
-    private var originalUser: User? = null  // Store original user data to compare
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,65 +51,30 @@ class MyProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Change color of top bar.
         requireActivity().window.statusBarColor = ContextCompat.getColor(requireContext(), R.color.green_background)
 
-        // Initialize Firebase Auth
+        // Initialize Firebase Auth and UserRepository
         auth = FirebaseAuth.getInstance()
-
-        // Initialize UserRepository with both Firestore and Room
-        val userDao = AppDatabase.getInstance(requireContext()).userDao()
-        userRepository = UserRepository(userDao, FirebaseFirestore.getInstance())
+        userRepository = UserRepository(
+            AppDatabase.getInstance(requireContext()).userDao(),
+            FirebaseFirestore.getInstance()
+        )
 
         val user = auth.currentUser
-        if (user != null) {
-            loadUserData(user.uid)
-        }
+        user?.let { loadUserData(it.uid) }
 
-        // Initialize the image picker launcher
+        // Setup image picker for changing profile picture
         setupImagePicker()
 
-        // Initially, make nameEdit not editable
+        // Initially disable editing and buttons
         binding.nameEdit.isEnabled = false
-
-        // Initially disable save and discard buttons and change their opacity
         disableButtons()
 
-        // Enable or disable name editing
-        binding.editNameIcon.setOnClickListener {
-            toggleNameEdit()
-            checkForChanges()
-        }
-
-        // Track changes to name field
-        binding.nameEdit.addTextChangedListener {
-            checkForChanges()
-        }
-
-        // Save user data
-        binding.btnSaveChanges.setOnClickListener {
-            if (user != null) {
-                saveUserData(user.uid)
-            }
-        }
-
-        // Change profile picture
-        binding.changePictureIcon.setOnClickListener {
-            openImagePicker()
-        }
-
-        // Discard changes
-        binding.btnDiscardChanges.setOnClickListener {
-            discardChanges()
-        }
-    }
-
-    private fun toggleNameEdit() {
-        // Toggle the editing state
-        isEditingName = !isEditingName
-
-        // Set whether the EditText is enabled based on the current state
-        binding.nameEdit.isEnabled = isEditingName
+        binding.editNameIcon.setOnClickListener { toggleNameEdit() }
+        binding.nameEdit.addTextChangedListener { checkForChanges() }
+        binding.changePictureIcon.setOnClickListener { openImagePicker() }
+        binding.btnSaveChanges.setOnClickListener { user?.let { saveUserData(it.uid) } }
+        binding.btnDiscardChanges.setOnClickListener { discardChanges() }
     }
 
     private fun setupImagePicker() {
@@ -121,35 +83,32 @@ class MyProfileFragment : Fragment() {
         ) { result ->
             if (result.resultCode == Activity.RESULT_OK && result.data != null) {
                 profileImageUri = result.data?.data
-
-                // Load selected image into profileImage view using Picasso
                 Picasso.get()
                     .load(profileImageUri)
                     .placeholder(R.drawable.ic_default_user_profile)
                     .error(R.drawable.ic_default_user_profile)
                     .transform(CircleTransform())
                     .into(binding.profileImage)
-
                 checkForChanges()  // Check for changes once the image is picked
             }
         }
     }
 
     private fun loadUserData(uid: String) {
-        // First, try to load from Room (local cache)
+        // Try to load data from Firestore first
         CoroutineScope(Dispatchers.IO).launch {
-            val cachedUser = userRepository.getUserById(uid)
-            cachedUser?.let {
-                originalUser = it // Store the original user data for comparison
-                updateUI(it)
-            }
-
-            // Then, try to load from Firestore (remote)
             val remoteUser = userRepository.getUserByIdFromFirestore(uid)
-            remoteUser?.let {
-                originalUser = it  // Store the original user data for comparison
-                updateUI(it)
-                userRepository.insertUserLocally(it)  // Cache it locally
+            if (remoteUser != null) {
+                originalUser = remoteUser  // Store original user data for comparison
+                updateUI(remoteUser)
+                userRepository.insertUserLocally(remoteUser)  // Cache remotely fetched data locally
+            } else {
+                // If Firestore fails, load from local Room (local cache)
+                val cachedUser = userRepository.getUserById(uid)
+                cachedUser?.let {
+                    originalUser = it  // Store original user data for comparison
+                    updateUI(it)
+                }
             }
         }
     }
@@ -159,68 +118,69 @@ class MyProfileFragment : Fragment() {
             binding.nameEdit.setText(user.name)
             binding.emailEdit.setText(user.email)
 
-            // Load profile picture with Picasso
-            if (user.profilePic.isNotEmpty()) {
-                val imageFile = File(user.profilePic)
-                if (imageFile.exists()) {
-                    Picasso.get()
-                        .load(imageFile)
-                        .placeholder(R.drawable.ic_default_user_profile)
-                        .error(R.drawable.ic_default_user_profile)
-                        .transform(CircleTransform())
-                        .into(binding.profileImage)
-
-                    originalProfileImageUri = Uri.parse(user.profilePic)  // Store original image URI
-                }
+            // Check if the profilePic path is not empty and the file exists
+            val profilePicFile = File(user.profilePic)
+            if (profilePicFile.exists()) {
+                // Load the profile picture from the file
+                Picasso.get()
+                    .load(profilePicFile)
+                    .placeholder(R.drawable.ic_default_user_profile)  // Placeholder in case loading takes time
+                    .error(R.drawable.ic_default_user_profile)        // Error image if loading fails
+                    .transform(CircleTransform())                    // Apply circular transformation
+                    .into(binding.profileImage)
             } else {
+                // If the profile picture file doesn't exist, load the default image
                 Picasso.get()
                     .load(R.drawable.ic_default_user_profile)
                     .transform(CircleTransform())
                     .into(binding.profileImage)
             }
 
+            originalProfileImageUri = Uri.parse(user.profilePic) // Store original profile pic URI for comparison
             disableButtons()  // Disable buttons initially after loading data
         }
     }
 
+    private fun toggleNameEdit() {
+        isEditingName = !isEditingName
+        binding.nameEdit.isEnabled = isEditingName
+        checkForChanges()
+    }
+
+    // Check for changes in both name and profile picture separately
     private fun checkForChanges() {
-        val updatedName = binding.nameEdit.text.toString().trim()  // Trim to avoid extra spaces
-        val currentImageUri = profileImageUri?.toString() ?: originalProfileImageUri?.toString()
-
-        // Enable buttons if either the name or profile picture has changed
-        val hasNameChanged = originalUser?.name != updatedName
-        val hasImageChanged = originalProfileImageUri?.toString() != currentImageUri
-
-        if (hasNameChanged || hasImageChanged) {
+        if (hasNameChanged() || hasProfilePictureChanged()) {
             enableButtons()
         } else {
             disableButtons()
         }
     }
 
-    private fun saveUserData(uid: String) {
-        val updatedName = binding.nameEdit.text.toString().trim()  // Get updated name
+    // Check if the profile picture was changed
+    private fun hasProfilePictureChanged(): Boolean {
+        val currentImageUri = profileImageUri?.toString() ?: originalProfileImageUri?.toString()
+        return originalProfileImageUri?.toString() != currentImageUri
+    }
 
-        // If profile image is changed, cache it locally
+    // Check if the name was changed
+    private fun hasNameChanged(): Boolean {
+        val updatedName = binding.nameEdit.text.toString().trim()
+        return originalUser?.name != updatedName
+    }
+
+    private fun saveUserData(uid: String) {
+        val updatedName = binding.nameEdit.text.toString().trim()
         profileImageUri?.let { uri ->
             userRepository.cacheImageLocally(requireContext(), uri) { localImagePath ->
                 val updatedUser = User(
-                    userId = uid,
-                    email = binding.emailEdit.text.toString(),
-                    name = updatedName,
-                    profilePic = localImagePath,
-                    signupDate = originalUser?.signupDate ?: System.currentTimeMillis()
+                    uid, binding.emailEdit.text.toString(), updatedName, localImagePath, originalUser?.signupDate ?: System.currentTimeMillis()
                 )
                 saveUserToDbAndFirestore(updatedUser)
             }
         } ?: run {
-            // If profile image is not changed, just update the name and use the old profile pic path
             val updatedUser = User(
-                userId = uid,
-                email = binding.emailEdit.text.toString(),
-                name = updatedName,
-                profilePic = originalProfileImageUri?.toString() ?: "",
-                signupDate = originalUser?.signupDate ?: System.currentTimeMillis()
+                uid, binding.emailEdit.text.toString(), updatedName,
+                originalProfileImageUri?.toString() ?: "", originalUser?.signupDate ?: System.currentTimeMillis()
             )
             saveUserToDbAndFirestore(updatedUser)
         }
@@ -228,15 +188,13 @@ class MyProfileFragment : Fragment() {
 
     private fun saveUserToDbAndFirestore(user: User) {
         CoroutineScope(Dispatchers.IO).launch {
-            userRepository.updateUser(user, onSuccess = {
-                // Update the originalUser object to reflect the new data
-                originalUser = user  // This ensures that the next time checkForChanges() is called, it will compare against the new saved state
-
+            userRepository.updateUser(user, {
+                originalUser = user
                 requireActivity().runOnUiThread {
                     showMessage("Changes saved successfully.")
-                    disableButtons() // Disable buttons after save
+                    disableButtons()
                 }
-            }, onFailure = {
+            }, {
                 requireActivity().runOnUiThread {
                     showMessage("Failed to save changes.")
                 }
@@ -245,27 +203,23 @@ class MyProfileFragment : Fragment() {
     }
 
     private fun discardChanges() {
-        // Restore the original profile image URI or default image
-        profileImageUri = null  // Clear the current selected image
+        // Revert profile picture if it was changed
+        if (hasProfilePictureChanged()) {
+            profileImageUri = null  // Reset the selected image
 
-        // Revert to original profile image or default if none exists
-        originalProfileImageUri?.let {
             Picasso.get()
-                .load(it)
+                .load(originalProfileImageUri)
                 .placeholder(R.drawable.ic_default_user_profile)
                 .error(R.drawable.ic_default_user_profile)
                 .transform(CircleTransform())
                 .into(binding.profileImage)
-        } ?: run {
-            // Set the default image if no original image exists
-            Picasso.get()
-                .load(R.drawable.ic_default_user_profile)
-                .transform(CircleTransform())
-                .into(binding.profileImage)
         }
 
-        // Reset the name field and other changes
-        binding.nameEdit.setText(originalUser?.name)
+        // Revert the name if it was changed
+        if (hasNameChanged()) {
+            binding.nameEdit.setText(originalUser?.name)
+        }
+
         disableButtons()
     }
 
@@ -276,19 +230,17 @@ class MyProfileFragment : Fragment() {
     }
 
     private fun disableButtons() {
-        // Set the buttons as disabled and lower their opacity
         binding.btnSaveChanges.isEnabled = false
         binding.btnDiscardChanges.isEnabled = false
-        binding.btnSaveChanges.alpha = 0.5f  // Lower opacity to show it's disabled
-        binding.btnDiscardChanges.alpha = 0.5f  // Lower opacity to show it's disabled
+        binding.btnSaveChanges.alpha = 0.5f
+        binding.btnDiscardChanges.alpha = 0.5f
     }
 
     private fun enableButtons() {
-        // Set the buttons as enabled and restore full opacity
         binding.btnSaveChanges.isEnabled = true
         binding.btnDiscardChanges.isEnabled = true
-        binding.btnSaveChanges.alpha = 1.0f  // Full opacity
-        binding.btnDiscardChanges.alpha = 1.0f  // Full opacity
+        binding.btnSaveChanges.alpha = 1.0f
+        binding.btnDiscardChanges.alpha = 1.0f
     }
 
     private fun showMessage(message: String) {
