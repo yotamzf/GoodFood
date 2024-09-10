@@ -19,38 +19,16 @@
         android:layout_marginEnd="12dp" />
 
     <!-- Recipe Title -->
-    <LinearLayout
-        android:layout_width="250dp"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        >
-
-        <TextView
-            android:id="@+id/tvRecipeTitle"
-            android:layout_width="334dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="12dp"
-            android:layout_weight="1"
-            android:text="Recipe Title"
-            android:textColor="@color/black"
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/tvRecipeAuthor"
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="12dp"
-            android:layout_weight="1"
-            android:text="Recipe Author"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:textSize="18sp"
-
-            />
-
-    </LinearLayout>
+    <TextView
+        android:id="@+id/tvRecipeTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Recipe Title"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="12dp" />
 
     <!-- Edit Button -->
     <ImageButton
@@ -62,8 +40,7 @@
         android:background="?attr/selectableItemBackground"
         android:padding="8dp"
         android:layout_gravity="center_vertical"
-        android:layout_marginEnd="8dp"
-       />
+        android:layout_marginEnd="8dp" />
 
     <!-- Delete Button -->
     <ImageButton
@@ -74,6 +51,5 @@
         android:contentDescription="@string/delete"
         android:background="?attr/selectableItemBackground"
         android:padding="8dp"
-        android:layout_gravity="center_vertical"
-      />
+        android:layout_gravity="center_vertical" />
 </LinearLayout>
