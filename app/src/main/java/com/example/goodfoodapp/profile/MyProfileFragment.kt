@@ -25,6 +25,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
 
 class MyProfileFragment : Fragment() {
 
@@ -53,7 +54,7 @@ class MyProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        //Change color of top bar.
+        // Change color of top bar.
         requireActivity().window.statusBarColor = ContextCompat.getColor(requireContext(), R.color.green_background)
 
         // Initialize Firebase Auth
@@ -102,11 +103,7 @@ class MyProfileFragment : Fragment() {
 
         // Discard changes
         binding.btnDiscardChanges.setOnClickListener {
-            if (user != null) {
-                loadUserData(user.uid)
-                showMessage("Changes discarded.")
-                disableButtons()  // Disable buttons after discarding changes
-            }
+            discardChanges()
         }
     }
 
@@ -164,14 +161,17 @@ class MyProfileFragment : Fragment() {
 
             // Load profile picture with Picasso
             if (user.profilePic.isNotEmpty()) {
-                Picasso.get()
-                    .load(user.profilePic)
-                    .placeholder(R.drawable.ic_default_user_profile)
-                    .error(R.drawable.ic_default_user_profile)
-                    .transform(CircleTransform())
-                    .into(binding.profileImage)
+                val imageFile = File(user.profilePic)
+                if (imageFile.exists()) {
+                    Picasso.get()
+                        .load(imageFile)
+                        .placeholder(R.drawable.ic_default_user_profile)
+                        .error(R.drawable.ic_default_user_profile)
+                        .transform(CircleTransform())
+                        .into(binding.profileImage)
 
-                originalProfileImageUri = Uri.parse(user.profilePic)  // Store original image URI
+                    originalProfileImageUri = Uri.parse(user.profilePic)  // Store original image URI
+                }
             } else {
                 Picasso.get()
                     .load(R.drawable.ic_default_user_profile)
@@ -201,31 +201,61 @@ class MyProfileFragment : Fragment() {
     private fun saveUserData(uid: String) {
         val updatedName = binding.nameEdit.text.toString()
 
-        // Update user information
-        val user = User(
-            userId = uid,
-            email = binding.emailEdit.text.toString(),
-            name = updatedName,
-            profilePic = profileImageUri?.toString() ?: originalUser?.profilePic ?: "",  // Save profilePic URL
-            signupDate = originalUser?.signupDate ?: System.currentTimeMillis()  // Keep the original sign-up date
-        )
+        // Cache the profile image locally
+        profileImageUri?.let { uri ->
+            userRepository.cacheImageLocally(requireContext(), uri) { localImagePath ->
+                // Save the user with the local image path
+                val user = User(
+                    userId = uid,
+                    email = binding.emailEdit.text.toString(),
+                    name = updatedName,
+                    profilePic = localImagePath,  // Save the cached image path locally
+                    signupDate = originalUser?.signupDate ?: System.currentTimeMillis()  // Keep the original sign-up date
+                )
 
-        // Update the existing document in Firestore
-        FirebaseFirestore.getInstance().collection("users").document(uid)
-            .set(user)  // This overwrites the document with the same ID (uid)
-            .addOnSuccessListener {
-                showMessage("Changes saved successfully.")
-            }
-            .addOnFailureListener {
-                showMessage("Failed to save changes.")
-            }
+                // Update the user in Firestore
+                FirebaseFirestore.getInstance().collection("users").document(uid)
+                    .set(user)
+                    .addOnSuccessListener {
+                        showMessage("Changes saved successfully.")
+                    }
+                    .addOnFailureListener {
+                        showMessage("Failed to save changes.")
+                    }
 
-        // Save locally (Room)
-        CoroutineScope(Dispatchers.IO).launch {
-            userRepository.insertUserLocally(user)
+                // Save locally (Room)
+                CoroutineScope(Dispatchers.IO).launch {
+                    userRepository.insertUserLocally(user)
+                }
+
+                // Disable buttons after save
+                disableButtons()
+            }
+        }
+    }
+
+    private fun discardChanges() {
+        // Restore the original profile image URI or default image
+        profileImageUri = null  // Clear the current selected image
+
+        // Revert to original profile image or default if none exists
+        originalProfileImageUri?.let {
+            Picasso.get()
+                .load(it)
+                .placeholder(R.drawable.ic_default_user_profile)
+                .error(R.drawable.ic_default_user_profile)
+                .transform(CircleTransform())
+                .into(binding.profileImage)
+        } ?: run {
+            // Set the default image if no original image exists
+            Picasso.get()
+                .load(R.drawable.ic_default_user_profile)
+                .transform(CircleTransform())
+                .into(binding.profileImage)
         }
 
-        // Disable buttons after save
+        // Reset the name field and other changes
+        binding.nameEdit.setText(originalUser?.name)
         disableButtons()
     }
 
@@ -234,7 +264,6 @@ class MyProfileFragment : Fragment() {
         intent.type = "image/*"
         imagePickerLauncher.launch(intent)
     }
-
 
     private fun disableButtons() {
         // Set the buttons as disabled and lower their opacity
@@ -255,7 +284,6 @@ class MyProfileFragment : Fragment() {
     private fun showMessage(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()

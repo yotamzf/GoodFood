@@ -5,32 +5,37 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/green_background"
-   >
+    android:background="@color/white"
+    android:padding="16dp">
 
     <!-- Header Layout -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"
+        android:background="@color/white">
 
         <ImageView
             android:id="@+id/ivLogo"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="16dp"
             android:src="@drawable/ic_goodfood_logo"
-        />
+            android:contentDescription="@string/logo_description" />
 
         <TextView
             android:id="@+id/tvHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="99dp"
-            android:layout_toRightOf="@id/ivLogo"
+            android:layout_toEndOf="@id/ivLogo"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
             android:text="My Recipes"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textColor="@color/black" />
     </RelativeLayout>
 
     <!-- RecyclerView for displaying recipes -->
@@ -40,5 +45,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:padding="8dp"
-        android:clipToPadding="false" />
+        android:clipToPadding="false"
+        android:background="@color/white" />
+
 </LinearLayout>

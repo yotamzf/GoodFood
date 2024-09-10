@@ -93,6 +93,7 @@ class MainActivity : AppCompatActivity() {
         if (auth.currentUser != null) {
             // If the user is already logged in, navigate to the Profile or Home Fragment
             navController.navigate(R.id.myProfileFragment)
+            bottomNavigationView.selectedItemId = R.id.nav_my_profile
         } else {
             // If the user is not logged in, navigate to the Login Fragment
             navController.navigate(R.id.loginFragment)

@@ -27,4 +27,5 @@
     <string name="search">Search</string>
     <string name="add_post">Add Post</string>
     <string name="log_out">Log Out</string>
+    <string name="recipe_image">recipe image</string>
 </resources>
