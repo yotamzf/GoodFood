@@ -17,4 +17,14 @@
     <string name="welcome_back">Welcome Back!</string>
     <string name="delete">Delete</string>
     <string name="edit">Edit</string>
+    <string name="your_email">Your Email</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="discard_changes">Discard Changes</string>
+    <string name="my_profile">My Profile</string>
+    <string name="name">Name</string>
+    <string name="edit_name">edit_name</string>
+    <string name="my_recipes">My Recipes</string>
+    <string name="search">Search</string>
+    <string name="add_post">Add Post</string>
+    <string name="log_out">Log Out</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.example.myapplication.room.dao
+package com.example.goodfoodapp.dal.room.dao
 
 import androidx.room.Dao
 import androidx.room.Insert

@@ -7,13 +7,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.navigation.Navigation
+import com.example.goodfoodapp.models.User
+import com.example.goodfoodapp.dal.room.AppDatabase
+import com.example.goodfoodapp.dal.repositories.UserRepository
 import com.example.goodfoodapp.utils.Validator
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class SignUp : Fragment() {
 
     private lateinit var auth: FirebaseAuth
     private val validator = Validator() // Initialize the Validator
+    private lateinit var userRepository: UserRepository
+    private lateinit var firestore: FirebaseFirestore
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -23,6 +32,11 @@ class SignUp : Fragment() {
 
         // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
+
+        // Initialize Firestore and Room (local database)
+        firestore = FirebaseFirestore.getInstance()
+        val userDao = AppDatabase.getInstance(requireContext()).userDao()
+        userRepository = UserRepository(userDao, firestore)
 
         val emailEditText = view.findViewById<EditText>(R.id.etEmail)
         val nameEditText = view.findViewById<EditText>(R.id.etName)
@@ -38,7 +52,7 @@ class SignUp : Fragment() {
             val repeatPassword = repeatPasswordEditText.text.toString().trim()
 
             if (validateForm(email, name, password, repeatPassword)) {
-                signUpUser(email, password, view)
+                signUpUser(email, name, password, view)
             }
         }
 
@@ -70,15 +84,48 @@ class SignUp : Fragment() {
         return true
     }
 
-    private fun signUpUser(email: String, password: String, view: View) {
+    private fun signUpUser(email: String, name: String, password: String, view: View) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(context, "Sign Up Successful!", Toast.LENGTH_SHORT).show()
-                    Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
+                    val firebaseUser = task.result?.user
+                    if (firebaseUser != null) {
+                        // Create user object with signup date and placeholder profilePic
+                        val userId = firebaseUser.uid
+                        val profilePicUrl = "" //
+                        val signupDate = System.currentTimeMillis()
+                        val user = User(userId, email, name, profilePicUrl, signupDate)
+
+                        // Save user to Firestore
+                        saveUserToFirestore(user)
+
+                        // Save user to Room (local cache)
+                        saveUserToLocalDatabase(user)
+
+                        Toast.makeText(context, "Sign Up Successful!", Toast.LENGTH_SHORT).show()
+
+                        // Navigate to the login screen
+                        Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
+                    }
                 } else {
                     Toast.makeText(context, "Sign Up Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
+    }
+
+    private fun saveUserToFirestore(user: User) {
+        firestore.collection("users").document(user.userId).set(user)
+            .addOnSuccessListener {
+                Toast.makeText(context, "User saved to Firestore", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Error saving user: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun saveUserToLocalDatabase(user: User) {
+        GlobalScope.launch(Dispatchers.IO) {
+            userRepository.insertUserLocally(user)
+        }
     }
 }

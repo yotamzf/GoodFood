@@ -4,22 +4,31 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import com.example.goodfoodapp.utils.Validator
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import androidx.lifecycle.lifecycleScope
+import com.example.goodfoodapp.models.User
+import com.example.goodfoodapp.dal.repositories.UserRepository
+import com.example.goodfoodapp.dal.room.AppDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class LoginFragment : Fragment() {
 
     private lateinit var auth: FirebaseAuth
-    private val validator = Validator()
+    private lateinit var userRepository: UserRepository
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_log_in, container, false)
 
         val emailEditText = view.findViewById<EditText>(R.id.etEmail)
@@ -27,19 +36,17 @@ class LoginFragment : Fragment() {
         val loginButton = view.findViewById<Button>(R.id.btnLogin)
         val signUpTextView = view.findViewById<TextView>(R.id.tvSignUpPrompt)
 
-        // Initialize Firebase Auth
+        // Initialize Firebase Auth and UserRepository
         auth = FirebaseAuth.getInstance()
+        val db = AppDatabase.getInstance(requireContext())
+        userRepository = UserRepository(db.userDao(), FirebaseFirestore.getInstance())
 
         // Handle Login Button Click
         loginButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
             val password = passwordEditText.text.toString().trim()
 
-            if (validateForm(email, password)) {
-                loginWithFirebase(email, password, view)
-            } else {
-                Toast.makeText(context, "Please enter email and password", Toast.LENGTH_SHORT).show()
-            }
+            loginWithFirebase(email, password, view)
         }
 
         // Handle Sign Up Prompt (navigate to sign-up screen)
@@ -49,29 +56,57 @@ class LoginFragment : Fragment() {
 
         return view
     }
-    private fun validateForm(email: String, password: String): Boolean{
-        if (!validator.validateEmail(email)) {
-            Toast.makeText(context, "Please enter a valid email", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (!validator.validatePassword(password)) {
-            Toast.makeText(context, "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number", Toast.LENGTH_LONG).show()
-            return false
-        }
-        return true
-    }
 
     private fun loginWithFirebase(email: String, password: String, view: View) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Login successful
-                    Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
-                    Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_myRecipesFragment)
+                    val firebaseUser = task.result?.user
+                    val userId = firebaseUser?.uid ?: return@addOnCompleteListener
+
+                    // Fetch user data from Firestore after successful login
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        try {
+                            val user = fetchUserFromFirestore(userId)
+                            if (user != null) {
+                                // Cache user data locally
+                                userRepository.insertUserLocally(user)
+
+                                // Navigate to My Profile Fragment
+                                navigateToApp(view)
+                            } else {
+                                showToast("Failed to fetch user data from Firestore")
+                            }
+                        } catch (e: Exception) {
+                            showToast("Error: ${e.message}")
+                            e.printStackTrace()
+                        }
+                    }
                 } else {
-                    // Login failed
-                    Toast.makeText(context, "Email or password are incorrect", Toast.LENGTH_SHORT).show()
+                    showToast("Login failed. Please check your email or password.")
                 }
             }
+    }
+
+    private suspend fun fetchUserFromFirestore(userId: String): User? {
+        return try {
+            val document = FirebaseFirestore.getInstance().collection("users").document(userId).get().await()
+            document.toObject(User::class.java)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun navigateToApp(view: View) {
+        lifecycleScope.launch(Dispatchers.Main) {
+            Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_myProfileFragment)
+        }
+    }
+
+    private fun showToast(message: String) {
+        lifecycleScope.launch(Dispatchers.Main) {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
     }
 }

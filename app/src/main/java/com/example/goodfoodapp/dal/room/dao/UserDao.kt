@@ -1,4 +1,4 @@
-package com.example.myapplication.room.dao
+package com.example.goodfoodapp.dal.room.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -17,4 +17,7 @@ interface UserDao {
 
     @Query("SELECT * FROM users")
     suspend fun getAllUsers(): List<User>
+
+    @Query("DELETE FROM users")
+    suspend fun clearAllUsers()
 }
