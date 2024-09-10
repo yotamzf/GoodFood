@@ -65,4 +65,21 @@
         android:label="Search">
     </fragment>
 
+    <fragment
+        android:id="@+id/createRecipeFragment"
+        android:name="com.example.goodfoodapp.create_recipe.CreateRecipeFragment"
+        android:label="Create Recipe">
+    </fragment>
+    <fragment
+        android:id="@+id/editRecipeFragment"
+        android:name="com.example.goodfoodapp.edit_recipe.EditRecipeFragment"
+        android:label="Create Recipe">
+    </fragment>
+    <fragment
+        android:id="@+id/viewRecipeFragment"
+        android:name="com.example.goodfoodapp.view_recipe.ViewRecipeFragment"
+        android:label="Create Recipe">
+    </fragment>
+
+
 </navigation>

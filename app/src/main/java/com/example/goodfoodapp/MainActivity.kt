@@ -64,10 +64,10 @@ class MainActivity : AppCompatActivity() {
                     navController.navigate(R.id.searchFragment)  // Navigates to Search
                     true
                 }
-//                R.id.nav_new_post -> {
-//                    navController.navigate(R.id.newPostFragment)  // Navigates to New Post
-//                    true
-//                }
+                R.id.nav_new_post -> {
+                    navController.navigate(R.id.createRecipeFragment)  // Navigates to New Post
+                    true
+                }
                 R.id.nav_my_profile -> {
                     navController.navigate(R.id.myProfileFragment)  // Navigates to My Profile
                     true

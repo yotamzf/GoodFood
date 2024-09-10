@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Image Placeholder -->
+    <ImageView
+        android:id="@+id/ivRecipeImage"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:src="@drawable/ic_recipe_placeholder"
+        android:layout_gravity="center_horizontal"
+        android:scaleType="centerCrop"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Title Text Field -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Title"
+        android:padding="12dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/search_background"
+        android:textSize="16sp" />
+
+    <!-- Content Text Field -->
+    <TextView
+        android:id="@+id/tvContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CONTENT"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/search_background"
+        android:textSize="14sp" />
+</LinearLayout>
