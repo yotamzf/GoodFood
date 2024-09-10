@@ -1,7 +1,6 @@
 package com.example.goodfoodapp.dal.room.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -18,9 +17,6 @@ interface RecipeDao {
 
     @Query("SELECT * FROM recipes WHERE userId = :userId")
     suspend fun getRecipesByUser(userId: String): List<Recipe>
-
-    @Query("SELECT * FROM recipes WHERE title LIKE '%' || :title || '%'")
-    suspend fun getRecipesByTitle(title: String): List<Recipe>
 
     @Query("DELETE FROM recipes WHERE recipeId = :recipeId")
     suspend fun deleteRecipeById(recipeId: String)
