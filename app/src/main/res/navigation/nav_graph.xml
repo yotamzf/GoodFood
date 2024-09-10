@@ -32,8 +32,28 @@
         android:id="@+id/myRecipesFragment"
         android:name="com.example.goodfoodapp.my_recipes.MyRecipesFragment"
         android:label="My Recipes"
-        tools:layout="@layout/fragment_my_recipes" />
-
+        tools:layout="@layout/fragment_my_recipes">
+        <action
+            android:id="@+id/action_myRecipesFragment_to_newPostFragment"
+            app:destination="@id/newPostFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/newPostFragment"
+        android:name="com.example.goodfoodapp.new_post.NewPostFragment"
+        android:label="New Post">
+        <argument
+            android:name="recipeId"
+            app:argType="string" />
+        <argument
+            android:name="recipeTitle"
+            app:argType="string" />
+        <argument
+            android:name="recipeContent"
+            app:argType="string" />
+        <argument
+            android:name="recipePicture"
+            app:argType="string" />
+    </fragment>
     <fragment
         android:id="@+id/myProfileFragment"
         android:name="com.example.goodfoodapp.profile.MyProfileFragment"
