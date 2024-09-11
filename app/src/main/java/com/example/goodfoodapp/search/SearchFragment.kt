@@ -32,6 +32,8 @@ class SearchFragment : Fragment() {
 
         // Initialize the adapter
         recipesAdapter = RecipesAdapter(
+            showEditAndDeleteButtons = false,
+            showAuthor = true,
             onDeleteClick = { recipe ->
                 // Handle delete click
             },
