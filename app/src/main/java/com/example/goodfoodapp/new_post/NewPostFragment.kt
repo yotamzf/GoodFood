@@ -8,6 +8,7 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -20,6 +21,7 @@ import com.example.goodfoodapp.models.Recipe
 import com.example.goodfoodapp.utils.Validator
 import com.example.goodfoodapp.viewmodels.RecipeViewModel
 import com.example.goodfoodapp.viewmodels.RecipeViewModelFactory
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 import java.util.*
@@ -172,6 +174,10 @@ class NewPostFragment : Fragment() {
                     userId = userId
                 )
                 recipeViewModel.insertRecipe(recipe)
+
+                // Show success message with Toast
+                Snackbar.make(binding.root, "Recipe successfully saved!!", Snackbar.LENGTH_LONG).show()
+
                 findNavController().navigate(NewPostFragmentDirections.actionNewPostFragmentToMyRecipesFragment())
             } else {
                 showErrorDialog("Recipe with this ID already exists.")
@@ -190,8 +196,13 @@ class NewPostFragment : Fragment() {
         AlertDialog.Builder(requireContext())
             .setTitle("Unsaved Changes")
             .setMessage("Are you sure you want to leave without saving the recipe?")
-            .setPositiveButton("Yes") { dialog, _ -> dialog.dismiss() }
-            .setNegativeButton("No") { _, _ -> findNavController().navigateUp() }
+            .setPositiveButton("Yes") {  dialog, _ ->
+                dialog.dismiss()
+                Snackbar.make(binding.root, "Changes discarded", Snackbar.LENGTH_LONG).show()
+            }
+            .setNegativeButton("No") {_, _ ->
+                findNavController().navigateUp()
+            }
             .create()
             .show()
     }
