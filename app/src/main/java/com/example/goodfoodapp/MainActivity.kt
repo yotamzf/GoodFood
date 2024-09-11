@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_new_post -> {
-                    navController.navigate(R.id.createRecipeFragment)  // Navigates to New Post
+                    navController.navigate(R.id.newPostFragment)  // Navigates to New Post
                     true
                 }
                 R.id.nav_my_profile -> {

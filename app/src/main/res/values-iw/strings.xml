@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GoodFoodApp</string>
+    <string name="sign_up_title">הירשם!</string>
+    <string name="sign_up_msg">צור את החשבון שלך</string>
+    <string name="email_txt">אימייל</string>
+    <string name="name_txt">שם</string>
+    <string name="password_txt">סיסמה</string>
+    <string name="repeat_password_txt">חזור על הסיסמה</string>
+    <string name="btn_sign_up_txt">הרשמה</string>
+    <string name="switch_to_login_msg">יש לך כבר חשבון? התחבר</string>
+    <string name="logo_description">לוגו</string>
+    <string name="login_txt_msg">התחברות</string>
+    <string name="dont_have_account_msg">אין לך חשבון? הירשם</string>
+    <string name="password">סיסמה</string>
+    <string name="email">אימייל</string>
+    <string name="log_in_to_your_account">התחבר לחשבון שלך</string>
+    <string name="welcome_back">ברוך שובך!</string>
+    <string name="delete">מחק</string>
+    <string name="edit">ערוך</string>
+    <string name="your_email">האימייל שלך</string>
+    <string name="save_changes">שמור שינויים</string>
+    <string name="discard_changes">בטל שינויים</string>
+    <string name="my_profile">הפרופיל שלי</string>
+    <string name="name">שם</string>
+    <string name="edit_name">ערוך שם</string>
+    <string name="my_recipes">המתכונים שלי</string>
+    <string name="search">חיפוש</string>
+    <string name="add_post">הוסף פוסט</string>
+    <string name="log_out">התנתקות</string>
+    <string name="recipe_image">תמונת המתכון</string>
+</resources>

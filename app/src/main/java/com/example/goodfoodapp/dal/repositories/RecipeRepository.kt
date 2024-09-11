@@ -19,19 +19,46 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val db: Firebas
         }
     }
 
-    // Delete recipe from both Room and Firestore
-    suspend fun deleteRecipe(recipe: Recipe) {
-        withContext(Dispatchers.IO) {
-            // Delete from local Room database using the recipe ID
-            recipeDao.deleteRecipeById(recipe.recipeId)
-
-            // Delete from Firestore using the recipe ID (Ensure the document reference is correct)
-            val documentRef = db.collection("recipes").document(recipe.recipeId)
-            documentRef.delete().await()
+    // Corrected return type to Recipe?
+    suspend fun getRecipeLocally(recipeId: String): Recipe? {
+        return withContext(Dispatchers.IO) {
+            recipeDao.getRecipeById(recipeId)  // Return the recipe from Room database
         }
     }
 
-    // Get all recipes by a specific user, prefer fetching from Firebase, fallback to Room
+    // Insert recipe into Firestore and locally in Room database
+    suspend fun insertRecipe(recipe: Recipe) {
+        withContext(Dispatchers.IO) {
+            // Insert recipe into Room
+            recipeDao.insertRecipe(recipe)
+
+            // Insert recipe into Firestore
+            val firestoreRecipe = FirestoreRecipe(
+                recipeId = recipe.recipeId,
+                title = recipe.title,
+                picture = recipe.picture,
+                content = recipe.content,
+                uploadDate = Timestamp(Date(recipe.uploadDate)),  // Convert Long to Timestamp
+                userId = recipe.userId
+            )
+            db.collection("recipes").document(recipe.recipeId).set(firestoreRecipe).await()
+        }
+    }
+
+    // Get recipe by ID from Firestore, fallback to Room if necessary
+    suspend fun getRecipeById(recipeId: String): Recipe? {
+        return try {
+            // Attempt to fetch recipe from Firestore
+            val docSnapshot = db.collection("recipes").document(recipeId).get().await()
+            val firestoreRecipe = docSnapshot.toObject(FirestoreRecipe::class.java)
+            firestoreRecipe?.toRecipe()
+        } catch (e: Exception) {
+            // Fallback to Room if Firestore fails
+            recipeDao.getRecipeById(recipeId)
+        }
+    }
+
+    // Get all recipes by a specific user, prefer fetching from Firestore, fallback to Room
     suspend fun getRecipesByUser(userId: String): List<Recipe> {
         return try {
             // Fetch recipes from Firestore
@@ -57,22 +84,29 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val db: Firebas
         }
     }
 
-    // Insert or update recipe in both Room and Firestore
-    suspend fun insertRecipe(recipe: Recipe) {
+    // Delete recipe from both Firestore and Room
+    suspend fun deleteRecipe(recipe: Recipe) {
         withContext(Dispatchers.IO) {
-            // Insert recipe into the local Room database
-            recipeDao.insertRecipe(recipe)
+            // Delete from Firestore
+            db.collection("recipes").document(recipe.recipeId).delete().await()
 
-            // Convert Long to Timestamp before inserting into Firestore
-            val firestoreRecipe = FirestoreRecipe(
-                recipeId = recipe.recipeId,
-                title = recipe.title,
-                picture = recipe.picture,
-                content = recipe.content,
-                uploadDate = Timestamp(Date(recipe.uploadDate)),  // Convert Long to Timestamp
-                userId = recipe.userId
-            )
-            db.collection("recipes").document(recipe.recipeId).set(firestoreRecipe).await()
+            // Delete from local Room database
+            recipeDao.deleteRecipeById(recipe.recipeId)
         }
+    }
+
+    // Check if recipe ID exists in Firestore
+    suspend fun checkRecipeIdInFirestore(recipeId: String): Boolean {
+        return try {
+            val docSnapshot = db.collection("recipes").document(recipeId).get().await()
+            docSnapshot.exists()
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // Check if recipe ID exists in Room
+    suspend fun checkRecipeIdInRoom(recipeId: String): Boolean {
+        return recipeDao.getRecipeById(recipeId) != null
     }
 }

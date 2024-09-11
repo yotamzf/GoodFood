@@ -6,6 +6,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.goodfoodapp.R
 import com.example.goodfoodapp.databinding.FragmentMyRecipesBinding
 import com.example.goodfoodapp.dal.repositories.RecipeRepository
 import com.example.goodfoodapp.dal.room.AppDatabase
@@ -64,25 +65,30 @@ class MyRecipesFragment : Fragment() {
     }
 
     private fun editRecipe(recipe: Recipe) {
-        val action = MyRecipesFragmentDirections.actionMyRecipesFragmentToNewPostFragment(
-            recipeId = recipe.recipeId,
-            recipeTitle = recipe.title,
-            recipeContent = recipe.content,
-            recipePicture = recipe.picture
-        )
-        findNavController().navigate(action)
+        // Check if the current destination is correct before navigating
+        val navController = findNavController()
+        if (navController.currentDestination?.id == R.id.myRecipesFragment) {
+            val action = MyRecipesFragmentDirections.actionMyRecipesFragmentToNewPostFragment(
+                recipeId = recipe.recipeId,
+                recipeTitle = recipe.title,
+                recipeContent = recipe.content,
+                recipePicture = recipe.picture ?: "", // Handle null picture case
+                isEditMode = true  // Set isEditMode to true
+            )
+            navController.navigate(action)
+        }
     }
 
     // Show confirmation dialog before deletion
     private fun showDeleteConfirmationDialog(recipe: Recipe) {
         val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle("מחיקת מתכון")
-        builder.setMessage("האם ברצונך למחוק את המתכון הזה?")
-        builder.setPositiveButton("כן") { dialog, _ ->
+        builder.setTitle("Delete Recipe")
+        builder.setMessage("Are you sure you want to delete this recipe?")
+        builder.setPositiveButton("Yes") { dialog, _ ->
             deleteRecipe(recipe) // Proceed with deletion if the user confirms
             dialog.dismiss()
         }
-        builder.setNegativeButton("לא") { dialog, _ ->
+        builder.setNegativeButton("No") { dialog, _ ->
             dialog.dismiss() // Cancel deletion if the user declines
         }
         builder.create().show()
@@ -96,7 +102,6 @@ class MyRecipesFragment : Fragment() {
                 }
                 fetchUserRecipes()  // Refresh list after deletion
             } catch (e: Exception) {
-                // Show error message in case of failure
                 showErrorDialog("Failed to delete recipe: ${e.message}")
             }
         }
@@ -107,9 +112,7 @@ class MyRecipesFragment : Fragment() {
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Error")
         builder.setMessage(message)
-        builder.setPositiveButton("OK") { dialog, _ ->
-            dialog.dismiss()
-        }
+        builder.setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
         builder.create().show()
     }
 }

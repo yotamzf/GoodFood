@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     app:startDestination="@id/loginFragment">
 
+    <!-- SignUpFragment -->
     <fragment
         android:id="@+id/signUpFragment"
         android:name="com.example.goodfoodapp.authenticate.SignUp"
@@ -13,9 +14,10 @@
             app:destination="@id/loginFragment" />
     </fragment>
 
+    <!-- LoginFragment -->
     <fragment
         android:id="@+id/loginFragment"
-        android:name="com.example.goodfoodapp.authenticate.LoginFragment"
+        android:name="com.example.goodfoodapp.authenticate.LogIn"
         android:label="Log In">
         <action
             android:id="@+id/action_loginFragment_to_signup_fragment"
@@ -25,9 +27,10 @@
             app:destination="@id/myRecipesFragment" />
         <action
             android:id="@+id/action_loginFragment_to_myProfileFragment"
-            app:destination="@id/myProfileFragment"/>
+            app:destination="@id/myProfileFragment" />
     </fragment>
 
+    <!-- MyRecipesFragment -->
     <fragment
         android:id="@+id/myRecipesFragment"
         android:name="com.example.goodfoodapp.my_recipes.MyRecipesFragment"
@@ -35,51 +38,65 @@
         tools:layout="@layout/fragment_my_recipes">
         <action
             android:id="@+id/action_myRecipesFragment_to_newPostFragment"
-            app:destination="@id/newPostFragment" />
+            app:destination="@id/newPostFragment"
+            app:popUpTo="@id/myRecipesFragment"
+            app:popUpToInclusive="false" />
     </fragment>
+
+    <!-- NewPostFragment -->
     <fragment
         android:id="@+id/newPostFragment"
         android:name="com.example.goodfoodapp.new_post.NewPostFragment"
         android:label="New Post">
+        <!-- Arguments passed to NewPostFragment -->
         <argument
             android:name="recipeId"
-            app:argType="string" />
+            app:argType="string"
+            android:defaultValue="" />
         <argument
             android:name="recipeTitle"
-            app:argType="string" />
+            app:argType="string"
+            android:defaultValue="" />
         <argument
             android:name="recipeContent"
-            app:argType="string" />
+            app:argType="string"
+            android:defaultValue="" />
         <argument
             android:name="recipePicture"
-            app:argType="string" />
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="isEditMode"
+            app:argType="boolean"
+            android:defaultValue="false" />
+
+        <!-- Navigation back to MyRecipesFragment -->
+        <action
+            android:id="@+id/action_newPostFragment_to_myRecipesFragment"
+            app:destination="@id/myRecipesFragment"
+            app:popUpTo="@id/newPostFragment"
+            app:popUpToInclusive="true" />
     </fragment>
+
+    <!-- MyProfileFragment -->
     <fragment
         android:id="@+id/myProfileFragment"
         android:name="com.example.goodfoodapp.profile.MyProfileFragment"
         android:label="My Profile">
     </fragment>
+
+    <!-- SearchFragment -->
     <fragment
         android:id="@+id/searchFragment"
         android:name="com.example.goodfoodapp.search.SearchFragment"
         android:label="Search">
     </fragment>
 
-    <fragment
-        android:id="@+id/createRecipeFragment"
-        android:name="com.example.goodfoodapp.create_recipe.CreateRecipeFragment"
-        android:label="Create Recipe">
-    </fragment>
-    <fragment
-        android:id="@+id/editRecipeFragment"
-        android:name="com.example.goodfoodapp.edit_recipe.EditRecipeFragment"
-        android:label="Create Recipe">
-    </fragment>
+    <!-- ViewRecipeFragment -->
     <fragment
         android:id="@+id/viewRecipeFragment"
         android:name="com.example.goodfoodapp.view_recipe.ViewRecipeFragment"
         android:label="Create Recipe">
     </fragment>
-
 
 </navigation>

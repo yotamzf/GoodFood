@@ -22,7 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class LoginFragment : Fragment() {
+class LogIn : Fragment() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var userRepository: UserRepository
