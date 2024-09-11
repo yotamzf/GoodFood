@@ -179,8 +179,8 @@ class NewPostFragment : Fragment() {
         AlertDialog.Builder(requireContext())
             .setTitle("Unsaved Changes")
             .setMessage("Are you sure you want to leave without saving the recipe?")
-            .setPositiveButton("Yes") { _, _ -> findNavController().navigateUp() }
-            .setNegativeButton("No") { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton("Yes") { dialog, _ -> dialog.dismiss() }
+            .setNegativeButton("No") { _, _ -> findNavController().navigateUp() }
             .create()
             .show()
     }
