@@ -11,6 +11,7 @@ import com.example.goodfoodapp.databinding.FragmentMyRecipesBinding
 import com.example.goodfoodapp.dal.repositories.RecipeRepository
 import com.example.goodfoodapp.dal.room.AppDatabase
 import com.example.goodfoodapp.models.Recipe
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
@@ -103,6 +104,7 @@ class MyRecipesFragment : Fragment() {
                     recipeRepository.deleteRecipe(recipe)  // Correctly call the repository method
                 }
                 fetchUserRecipes()  // Refresh list after deletion
+                showSnackbar("Post deleted")
             } catch (e: Exception) {
                 showErrorDialog("Failed to delete recipe: ${e.message}")
             }
@@ -116,5 +118,9 @@ class MyRecipesFragment : Fragment() {
         builder.setMessage(message)
         builder.setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
         builder.create().show()
+    }
+
+    private fun showSnackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 }

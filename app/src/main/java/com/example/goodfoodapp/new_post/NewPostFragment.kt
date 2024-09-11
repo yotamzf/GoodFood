@@ -2,13 +2,14 @@ package com.example.goodfoodapp.new_post
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -24,6 +25,11 @@ import com.example.goodfoodapp.viewmodels.RecipeViewModelFactory
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
+import com.squareup.picasso.Target
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
 import java.util.*
 
 class NewPostFragment : Fragment() {
@@ -37,7 +43,7 @@ class NewPostFragment : Fragment() {
     private lateinit var originalRecipe: Recipe
     private var selectedImageUri: Uri? = null
     private var localImagePath: String = ""
-    private val validator = Validator()  // Initialize Validator
+    private val validator = Validator()
 
     // Image picker launcher
     private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -45,7 +51,8 @@ class NewPostFragment : Fragment() {
             selectedImageUri = result.data?.data
             selectedImageUri?.let { uri ->
                 binding.ivRecipeImage.setImageURI(uri)
-                localImagePath = uri.toString() // Save the URI as the local image path
+                // Save the image locally and store the local path
+                saveImageLocally(uri)
                 hasChanged = true
             }
         }
@@ -90,7 +97,6 @@ class NewPostFragment : Fragment() {
         }
     }
 
-
     private fun setupListeners() {
         // Listen for changes in the title and content fields
         binding.etTitle.setOnFocusChangeListener { _, _ -> hasChanged = true }
@@ -121,8 +127,11 @@ class NewPostFragment : Fragment() {
                     binding.etContent.setText(recipe.content)
                 }
 
-                // Load image with Picasso, or show placeholder if no image
-                if (!recipe.picture.isNullOrEmpty()) {
+                // Load image from internal storage if exists, otherwise use Picasso from URL
+                val file = File(requireContext().filesDir, "${recipe.recipeId}.jpg")
+                if (file.exists()) {
+                    Picasso.get().load(file).into(binding.ivRecipeImage)
+                } else if (!recipe.picture.isNullOrEmpty()) {
                     Picasso.get().load(recipe.picture)
                         .placeholder(R.drawable.ic_recipe_placeholder)
                         .into(binding.ivRecipeImage)
@@ -135,7 +144,6 @@ class NewPostFragment : Fragment() {
         recipeViewModel.getRecipeById(args.recipeId)
     }
 
-    // Use the validator for validation
     private fun isValidRecipe(): Boolean {
         val title = binding.etTitle.text.toString()
         val content = binding.etContent.text.toString()
@@ -169,7 +177,7 @@ class NewPostFragment : Fragment() {
                     recipeId = recipeId,
                     title = title,
                     content = content,
-                    picture = localImagePath,  // Store the local image path or URI
+                    picture = localImagePath,  // Save the local image path
                     uploadDate = System.currentTimeMillis(),
                     userId = userId
                 )
@@ -182,6 +190,22 @@ class NewPostFragment : Fragment() {
             } else {
                 showErrorDialog("Recipe with this ID already exists.")
             }
+        }
+    }
+
+    private fun saveImageLocally(uri: Uri) {
+        val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+        val file = File(requireContext().filesDir, "${UUID.randomUUID()}.jpg")
+        try {
+            val outputStream: OutputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            // Store the file path
+            localImagePath = file.absolutePath
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 

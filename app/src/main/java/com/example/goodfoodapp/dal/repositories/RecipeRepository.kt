@@ -3,6 +3,8 @@ package com.example.goodfoodapp.dal.repositories
 import com.example.goodfoodapp.models.FirestoreRecipe
 import com.example.goodfoodapp.models.Recipe
 import com.example.goodfoodapp.dal.room.dao.RecipeDao
+import com.example.goodfoodapp.models.RecipeWithUser
+import com.example.goodfoodapp.models.User
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -92,6 +94,48 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val db: Firebas
 
             // Delete from local Room database
             recipeDao.deleteRecipeById(recipe.recipeId)
+        }
+    }
+
+    suspend fun getAllRecipesWithUserDetails(): List<RecipeWithUser> {
+        return withContext(Dispatchers.IO) {
+            val recipeWithUserList = mutableListOf<RecipeWithUser>()
+
+            try {
+                // Fetch all recipes from Firestore
+                val recipeSnapshot = db.collection("recipes").get().await()
+                val recipes = recipeSnapshot.toObjects(FirestoreRecipe::class.java)
+
+                for (recipe in recipes) {
+                    // For each recipe, fetch the corresponding user details
+                    val userSnapshot = db.collection("users").document(recipe.userId).get().await()
+                    val user = userSnapshot.toObject(User::class.java)
+
+                    if (user != null) {
+                        // Combine recipe and user data
+                        val recipeWithUser = RecipeWithUser(
+                            recipeId = recipe.recipeId,
+                            title = recipe.title,
+                            picture = recipe.picture,
+                            content = recipe.content,
+                            uploadDate = recipe.uploadDate?.toDate()?.time ?: 0L,  // Convert Firestore Timestamp to Long
+                            userId = user.userId,
+                            userName = user.name
+                        )
+                        recipeWithUserList.add(recipeWithUser)
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle any exceptions here (log or return empty list)
+            }
+
+            recipeWithUserList // Return the list of recipes with user details
+        }
+    }
+
+    suspend fun getAllRecipesWithUserDetailsLocally(): List<RecipeWithUser> {
+        return withContext(Dispatchers.IO) {
+            recipeDao.getAllRecipesWithUserDetails()
         }
     }
 

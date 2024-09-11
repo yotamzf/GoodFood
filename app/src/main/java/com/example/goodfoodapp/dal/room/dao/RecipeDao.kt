@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.goodfoodapp.models.Recipe
+import com.example.goodfoodapp.models.RecipeWithUser
 
 @Dao
 interface RecipeDao {
@@ -19,11 +20,11 @@ interface RecipeDao {
     suspend fun getRecipesByTitle(title: String): List<Recipe>
 
     @Query("""
-        SELECT * FROM recipes 
-        INNER JOIN users ON recipes.userId = users.userId 
-        WHERE recipes.title LIKE '%' || :query || '%' OR users.name LIKE '%' || :query || '%'
+        SELECT recipes.recipeId, recipes.title, recipes.picture, recipes.content, recipes.uploadDate, users.userId, users.name as userName
+        FROM recipes
+        INNER JOIN users ON recipes.userId = users.userId
     """)
-    suspend fun getRecipesByTitleOrAuthor(query: String): List<Recipe>
+    suspend fun getAllRecipesWithUserDetails(): List<RecipeWithUser>
 
     @Query("SELECT * FROM recipes WHERE userId = :userId")
     suspend fun getRecipesByUser(userId: String): List<Recipe>
