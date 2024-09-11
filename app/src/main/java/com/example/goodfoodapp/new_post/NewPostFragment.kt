@@ -66,6 +66,14 @@ class NewPostFragment : Fragment() {
         recipeViewModel = ViewModelProvider(this, factory)[RecipeViewModel::class.java]
 
         isEdit = args.isEditMode
+
+        // Update the header title based on mode
+        if (isEdit) {
+            binding.tvHeader.text = getString(R.string.edit_post)
+        } else {
+            binding.tvHeader.text = getString(R.string.create_post)
+        }
+
         setupListeners()
 
         if (isEdit) {
@@ -79,6 +87,7 @@ class NewPostFragment : Fragment() {
             }
         }
     }
+
 
     private fun setupListeners() {
         // Listen for changes in the title and content fields
@@ -181,8 +190,8 @@ class NewPostFragment : Fragment() {
         AlertDialog.Builder(requireContext())
             .setTitle("Unsaved Changes")
             .setMessage("Are you sure you want to leave without saving the recipe?")
-            .setPositiveButton("Yes") { _, _ -> findNavController().navigateUp() }
-            .setNegativeButton("No") { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton("Yes") { dialog, _ -> dialog.dismiss() }
+            .setNegativeButton("No") { _, _ -> findNavController().navigateUp() }
             .create()
             .show()
     }

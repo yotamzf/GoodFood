@@ -3,7 +3,38 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/white"
     android:padding="16dp">
+
+    <!-- Header Layout with Logo and Title -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"
+        android:background="@color/white">
+
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="16dp"
+            android:src="@drawable/ic_goodfood_logo"
+            android:contentDescription="@string/logo_description" />
+
+        <TextView
+            android:id="@+id/tvHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/ivLogo"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:text="@string/create_post"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/black" />
+    </RelativeLayout>
 
     <!-- Image Placeholder -->
     <ImageView
@@ -20,7 +51,8 @@
         android:id="@+id/etTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Title"
+        android:hint="@string/title"
+        android:autofillHints="Title"
         android:background="@drawable/search_background"
         android:padding="12dp"
         android:layout_marginBottom="8dp"
@@ -35,7 +67,8 @@
         android:id="@+id/etContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="CONTENT"
+        android:hint="@string/content"
+        android:autofillHints="Content"
         android:background="@drawable/search_background"
         android:padding="12dp"
         android:layout_marginBottom="16dp"
@@ -50,7 +83,7 @@
         android:id="@+id/btnShare"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SHARE"
+        android:text="@string/share"
         android:backgroundTint="@color/primaryColor"
         android:textColor="@android:color/white"
         android:layout_gravity="center_horizontal" />

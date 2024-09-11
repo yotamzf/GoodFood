@@ -28,4 +28,9 @@
     <string name="add_post">Add Post</string>
     <string name="log_out">Log Out</string>
     <string name="recipe_image">Recipe Image</string>
+    <string name="share">SHARE</string>
+    <string name="content">Content</string>
+    <string name="title">Title</string>
+    <string name="create_post">Create Post</string>
+    <string name="edit_post">Edit Post</string>
 </resources>

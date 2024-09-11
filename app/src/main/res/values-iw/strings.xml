@@ -29,4 +29,9 @@
     <string name="add_post">הוסף פוסט</string>
     <string name="log_out">התנתקות</string>
     <string name="recipe_image">תמונת המתכון</string>
+    <string name="share">שיתוף</string>
+    <string name="content">תוכן</string>
+    <string name="title">כותרת</string>
+    <string name="create_post">צור פוסט</string>
+    <string name="edit_post">ערוך פוסט</string>
 </resources>
