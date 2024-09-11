@@ -16,8 +16,12 @@ interface RecipeDao {
     @Query("SELECT * FROM recipes WHERE recipeId = :recipeId")
     suspend fun getRecipeById(recipeId: String): Recipe?
 
-    @Query("SELECT * FROM recipes WHERE title LIKE '%' || :title || '%'")
-    suspend fun getRecipesByTitle(title: String): List<Recipe>
+    @Query("""
+        SELECT * FROM recipes 
+        INNER JOIN users ON recipes.userId = users.userId 
+        WHERE recipes.title LIKE '%' || :query || '%' OR users.name LIKE '%' || :query || '%'
+    """)
+    suspend fun getRecipesByTitleOrAuthor(query: String): List<Recipe>
 
     @Query("""
         SELECT recipes.recipeId, recipes.title, recipes.picture, recipes.content, recipes.uploadDate, users.userId, users.name as userName
