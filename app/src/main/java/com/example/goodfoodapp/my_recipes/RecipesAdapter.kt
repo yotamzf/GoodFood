@@ -14,6 +14,8 @@ import com.example.goodfoodapp.models.Recipe
 import com.squareup.picasso.Picasso
 
 class RecipesAdapter(
+    private val showEditAndDeleteButtons: Boolean,
+    private val showAuthor: Boolean,
     private val onDeleteClick: (Recipe) -> Unit,
     private val onEditClick: (Recipe) -> Unit
 ) : ListAdapter<Recipe, RecipesAdapter.RecipeViewHolder>(RecipeDiffCallback()) {
@@ -25,33 +27,44 @@ class RecipesAdapter(
 
     override fun onBindViewHolder(holder: RecipeViewHolder, position: Int) {
         val recipe = getItem(position)
-        holder.bind(recipe, onDeleteClick, onEditClick)
+        holder.bind(recipe, showEditAndDeleteButtons, showAuthor, onDeleteClick, onEditClick)
     }
 
     class RecipeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bind(recipe: Recipe, onDeleteClick: (Recipe) -> Unit, onEditClick: (Recipe) -> Unit) {
+        fun bind(
+            recipe: Recipe,
+            showEditAndDeleteButtons: Boolean,
+            showAuthor: Boolean,
+            onDeleteClick: (Recipe) -> Unit,
+            onEditClick: (Recipe) -> Unit
+        ) {
             // Bind data to the views
             val recipeImage = itemView.findViewById<ImageView>(R.id.ivRecipeImage)
             val recipeTitle = itemView.findViewById<TextView>(R.id.tvRecipeTitle)
-            val recipeAuthor = itemView.findViewById<TextView>(R.id.tvRecipeAuthor) // Add this line
+            val recipeAuthor = itemView.findViewById<TextView>(R.id.tvRecipeAuthor)
             val editButton = itemView.findViewById<ImageButton>(R.id.btnEdit)
             val deleteButton = itemView.findViewById<ImageButton>(R.id.btnDelete)
 
             // Use Picasso to load the image
             if (!recipe.picture.isNullOrEmpty()) {
                 Picasso.get()
-                    .load(recipe.picture) // Load the image if the URL is valid
-                    .placeholder(R.drawable.ic_recipe_placeholder) // Optional: placeholder while loading
-                    .error(R.drawable.ic_recipe_placeholder) // Optional: image on loading error
+                    .load(recipe.picture)
+                    .placeholder(R.drawable.ic_recipe_placeholder)
+                    .error(R.drawable.ic_recipe_placeholder)
                     .into(recipeImage)
             } else {
-                // Load a placeholder or error image if the URL is empty or null
                 Picasso.get()
-                    .load(R.drawable.ic_recipe_placeholder) // Placeholder image
+                    .load(R.drawable.ic_recipe_placeholder)
                     .into(recipeImage)
             }
+
             recipeTitle.text = recipe.title
             recipeAuthor.text = recipe.userId
+
+            // Set visibility based on parameters
+            editButton.visibility = if (showEditAndDeleteButtons) View.VISIBLE else View.GONE
+            deleteButton.visibility = if (showEditAndDeleteButtons) View.VISIBLE else View.GONE
+            recipeAuthor.visibility = if (showAuthor) View.VISIBLE else View.GONE
 
             editButton.setOnClickListener { onEditClick(recipe) }
             deleteButton.setOnClickListener { onDeleteClick(recipe) }

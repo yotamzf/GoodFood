@@ -46,6 +46,8 @@ class MyRecipesFragment : Fragment() {
         // Setup RecyclerView
         binding.rvRecipes.layoutManager = LinearLayoutManager(requireContext())
         recipesAdapter = RecipesAdapter(
+            showEditAndDeleteButtons = true,
+            showAuthor = false,
             onDeleteClick = { recipe -> showDeleteConfirmationDialog(recipe) }, // Show confirmation dialog
             onEditClick = { recipe -> editRecipe(recipe) }
         )
