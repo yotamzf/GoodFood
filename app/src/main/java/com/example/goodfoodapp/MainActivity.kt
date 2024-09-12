@@ -1,8 +1,10 @@
 package com.example.goodfoodapp
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -32,9 +34,21 @@ class MainActivity : AppCompatActivity() {
         val goodFoodApp = application as GoodFoodApp
         userRepository = goodFoodApp.userRepository
 
+        fetchAndSaveUsers()
+
         // Set up Navigation
         setupNavigation()
         checkUserLoggedInStatus()
+    }
+
+    private fun fetchAndSaveUsers() {
+        lifecycleScope.launch {
+            try {
+                userRepository.fetchAndSaveUsers()
+            } catch (e: Exception) {
+                Log.e("UserLog", "Error fetching users from remote: ${e.message}", e)
+            }
+        }
     }
 
     // Check if user is logged in and navigate to the appropriate fragment
