@@ -1,5 +1,6 @@
 package com.example.goodfoodapp.dal.repositories
 
+import android.util.Log
 import com.example.goodfoodapp.models.FirestoreRecipe
 import com.example.goodfoodapp.models.Recipe
 import com.example.goodfoodapp.dal.room.dao.RecipeDao
@@ -82,6 +83,61 @@ class RecipeRepository(
         }
     }
 
+    // Get all recipes, prefer fetching from Firestore, fallback to Room
+    suspend fun getAllRecipes(): List<Recipe> {
+        return try {
+            // Fetch all recipes from Firestore
+            val querySnapshot = db.collection("recipes")
+                .get()
+                .await()
+
+            // Convert Firestore documents to FirestoreRecipe objects, then to Recipe objects
+            val recipes = querySnapshot.documents.mapNotNull { document ->
+                document.toObject(FirestoreRecipe::class.java)?.toRecipe()
+            }
+
+            // Cache recipes locally in Room
+            withContext(Dispatchers.IO) {
+                recipes.forEach { insertRecipeLocally(it) }
+            }
+
+            recipes // Return the list of recipes from Firestore
+        } catch (e: Exception) {
+            // If Firestore fails, fallback to fetching from Room
+            withContext(Dispatchers.IO) {
+                recipeDao.getAllRecipes()
+            }
+        }
+    }
+
+    // Function to search recipes in Firestore
+    suspend fun searchRecipesInRemoteStorage(query: String): List<Recipe> {
+        return try {
+            // Search for recipes in Firestore by title or author's name
+            val querySnapshot = db.collection("recipes")
+                .whereGreaterThanOrEqualTo("title", query)
+                .whereLessThanOrEqualTo("title", query + "\uf8ff")
+                .get()
+                .await()
+
+            // Convert Firestore documents to FirestoreRecipe objects, then to Recipe objects
+            val recipes = querySnapshot.documents.mapNotNull { document ->
+                document.toObject(FirestoreRecipe::class.java)?.toRecipe()
+            }
+
+            // Cache the found recipes locally in Room
+            withContext(Dispatchers.IO) {
+                recipes.forEach { insertRecipeLocally(it) }
+            }
+
+            recipes // Return the list of recipes from Firestore
+        } catch (e: Exception) {
+            // If Firestore fails, log the error
+            Log.e("FirestoreError", "Failed to search recipes in Firestore: ${e.message}")
+            emptyList() // Return empty list if the search fails
+        }
+    }
+
     // Get all recipes by a specific user, prefer fetching from Firestore, fallback to Room
     suspend fun getRecipesByUser(userId: String): List<Recipe> {
         // First, check the cache in Room
@@ -129,6 +185,7 @@ class RecipeRepository(
     suspend fun getAllRecipesWithUserDetails(): List<RecipeWithUser> {
         return withContext(Dispatchers.IO) {
             val recipeWithUserList = mutableListOf<RecipeWithUser>()
+            val recipesList = mutableListOf<Recipe>()
 
             try {
                 // Fetch all recipes from Firestore
@@ -151,8 +208,23 @@ class RecipeRepository(
                             userName = user.name
                         )
                         recipeWithUserList.add(recipeWithUser)
+
+                        val recipeTemp = Recipe(
+                            recipeId = recipe.recipeId,
+                            title = recipe.title,
+                            picture = recipe.picture,
+                            content = recipe.content,
+                            uploadDate = recipe.uploadDate?.toDate()?.time ?: 0L,
+                            userId = user.userId,
+                        )
+
+                        recipesList.add(recipeTemp)
                     }
                 }
+
+                // Save to Room database
+                recipeDao.insertAll(recipesList)
+
             } catch (e: Exception) {
                 // Handle exceptions and return an empty list in case of failure
             }
@@ -162,9 +234,22 @@ class RecipeRepository(
     }
 
     // Get all recipes with user details from Room
-    suspend fun getAllRecipesWithUserDetailsLocally(): List<RecipeWithUser> {
+//    suspend fun getAllRecipesWithUserDetailsLocally(): List<RecipeWithUser> {
+//        return withContext(Dispatchers.IO) {
+//            recipeDao.getAllRecipesWithUserDetails()
+//        }
+//    }
+
+    suspend fun searchRecipesWithUserDetails(query: String): List<RecipeWithUser> {
         return withContext(Dispatchers.IO) {
-            recipeDao.getAllRecipesWithUserDetails()
+            try {
+                // Perform the search in the Room database
+                recipeDao.searchRecipesByQuery(query)
+            } catch (e: Exception) {
+                // Handle exceptions and return an empty list in case of failure
+                e.printStackTrace()
+                emptyList()
+            }
         }
     }
 

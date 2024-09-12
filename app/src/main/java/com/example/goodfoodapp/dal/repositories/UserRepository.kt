@@ -2,6 +2,7 @@ package com.example.goodfoodapp.dal.repositories
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.dal.room.dao.UserDao
 import com.example.goodfoodapp.dal.services.ImgurApiService
@@ -43,7 +44,12 @@ class UserRepository(
     }
 
     // Upload image to Imgur and cache the image locally
-    fun uploadAndCacheImage(context: Context, uri: Uri, onSuccess: (String) -> Unit, onError: (String) -> Unit) {
+    fun uploadAndCacheImage(
+        context: Context,
+        uri: Uri,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
         imgurApiService.uploadImage(File(uri.path ?: ""), { imageUrl ->
             // After successful upload, cache image locally
             cacheImageLocally(context, Uri.parse(imageUrl), onSuccess)
@@ -87,6 +93,42 @@ class UserRepository(
     suspend fun clearAllUsers() {
         withContext(Dispatchers.IO) {
             userDao.clearAllUsers()
+        }
+    }
+
+    suspend fun fetchAndSaveUsers() {
+        withContext(Dispatchers.IO) {
+            try {
+                // Fetch all users from remote (Firestore)
+                val users = getAllUsersFromRemote()
+
+                // Save all users to Room database
+                userDao.insertAllUsers(users)
+
+                Log.d("SaveUsers", "All users have been fetched from remote and saved to Room.")
+            } catch (e: Exception) {
+                // Log the exception if any occurs
+                Log.e("SaveUsersError", "Error fetching and saving users: ${e.message}", e)
+            }
+        }
+    }
+
+    suspend fun getAllUsersFromRemote(): List<User> {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Reference to the 'users' collection in Firestore
+                val userCollection = firestore.collection("users")
+
+                // Fetch all user documents from the collection
+                val snapshot = userCollection.get().await()
+
+                // Convert the snapshot to a list of User objects
+                snapshot.toObjects(User::class.java)
+            } catch (e: Exception) {
+                // Log the exception and return an empty list in case of failure
+                Log.e("FirestoreError", "Error fetching users: ${e.message}", e)
+                emptyList()
+            }
         }
     }
 }

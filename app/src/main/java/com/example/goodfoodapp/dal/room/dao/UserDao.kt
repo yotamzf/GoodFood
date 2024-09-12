@@ -10,6 +10,9 @@ import com.example.goodfoodapp.models.User
 interface UserDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllUsers(users: List<User>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: User)
 
     @Query("SELECT * FROM users WHERE userId = :userId")

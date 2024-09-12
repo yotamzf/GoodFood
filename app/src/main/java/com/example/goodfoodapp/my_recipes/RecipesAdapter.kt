@@ -11,14 +11,15 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.models.Recipe
+import com.example.goodfoodapp.models.RecipeWithUser
 import com.squareup.picasso.Picasso
 
 class RecipesAdapter(
     private val showEditAndDeleteButtons: Boolean,
     private val showAuthor: Boolean,
-    private val onDeleteClick: (Recipe) -> Unit,
-    private val onEditClick: (Recipe) -> Unit
-) : ListAdapter<Recipe, RecipesAdapter.RecipeViewHolder>(RecipeDiffCallback()) {
+    private val onDeleteClick: (RecipeWithUser) -> Unit,
+    private val onEditClick: (RecipeWithUser) -> Unit
+) : ListAdapter<RecipeWithUser, RecipesAdapter.RecipeViewHolder>(RecipeDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecipeViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_recipe, parent, false)
@@ -32,11 +33,11 @@ class RecipesAdapter(
 
     class RecipeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(
-            recipe: Recipe,
+            recipe: RecipeWithUser,
             showEditAndDeleteButtons: Boolean,
             showAuthor: Boolean,
-            onDeleteClick: (Recipe) -> Unit,
-            onEditClick: (Recipe) -> Unit
+            onDeleteClick: (RecipeWithUser) -> Unit,
+            onEditClick: (RecipeWithUser) -> Unit
         ) {
             // Bind data to the views
             val recipeImage = itemView.findViewById<ImageView>(R.id.ivRecipeImage)
@@ -59,7 +60,7 @@ class RecipesAdapter(
             }
 
             recipeTitle.text = recipe.title
-            recipeAuthor.text = recipe.userId
+            recipeAuthor.text = recipe.userName
 
             // Set visibility based on parameters
             editButton.visibility = if (showEditAndDeleteButtons) View.VISIBLE else View.GONE
@@ -71,12 +72,12 @@ class RecipesAdapter(
         }
     }
 
-    class RecipeDiffCallback : DiffUtil.ItemCallback<Recipe>() {
-        override fun areItemsTheSame(oldItem: Recipe, newItem: Recipe): Boolean {
+    class RecipeDiffCallback : DiffUtil.ItemCallback<RecipeWithUser>() {
+        override fun areItemsTheSame(oldItem: RecipeWithUser, newItem: RecipeWithUser): Boolean {
             return oldItem.recipeId == newItem.recipeId
         }
 
-        override fun areContentsTheSame(oldItem: Recipe, newItem: Recipe): Boolean {
+        override fun areContentsTheSame(oldItem: RecipeWithUser, newItem: RecipeWithUser): Boolean {
             return oldItem == newItem
         }
     }
