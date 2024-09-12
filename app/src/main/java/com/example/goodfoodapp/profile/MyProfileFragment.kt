@@ -140,28 +140,31 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
     }
 
     private fun updateUI(user: User) {
+        if (!isAdded) return  // Ensure fragment is still added
         requireActivity().runOnUiThread {
-            binding.nameEdit.setText(user.name)
-            binding.emailEdit.setText(user.email)
+            if (_binding != null) {  // Check if binding is not null before using it
+                binding.nameEdit.setText(user.name)
+                binding.emailEdit.setText(user.email)
 
-            // Load profile picture with Picasso and CircleTransform
-            if (user.profilePic.isNotEmpty()) {
-                Picasso.get()
-                    .load(user.profilePic)
-                    .placeholder(R.drawable.ic_default_user_profile)
-                    .error(R.drawable.ic_default_user_profile)
-                    .transform(CircleTransform())
-                    .into(binding.profileImage)
+                // Load profile picture with Picasso and CircleTransform
+                if (user.profilePic.isNotEmpty()) {
+                    Picasso.get()
+                        .load(user.profilePic)
+                        .placeholder(R.drawable.ic_default_user_profile)
+                        .error(R.drawable.ic_default_user_profile)
+                        .transform(CircleTransform())
+                        .into(binding.profileImage)
 
-                originalProfileImageUri = Uri.parse(user.profilePic)
-            } else {
-                Picasso.get()
-                    .load(R.drawable.ic_default_user_profile)
-                    .transform(CircleTransform())
-                    .into(binding.profileImage)
+                    originalProfileImageUri = Uri.parse(user.profilePic)
+                } else {
+                    Picasso.get()
+                        .load(R.drawable.ic_default_user_profile)
+                        .transform(CircleTransform())
+                        .into(binding.profileImage)
+                }
+
+                disableButtons()  // Disable buttons initially after loading data
             }
-
-            disableButtons()  // Disable buttons initially after loading data
         }
     }
 
