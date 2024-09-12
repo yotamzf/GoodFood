@@ -4,4 +4,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="green_background">#ADDB77</color>
     <color name="primaryColor">#ADDB77</color>
+    <color name="black_alpha">#80000000</color>
 </resources>

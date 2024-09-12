@@ -1,125 +1,134 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:padding="16dp"
     android:background="@color/white">
 
-    <!-- Header Layout with Logo and Title -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="16dp"
-        android:paddingBottom="8dp"
-        android:background="@color/white">
-
-        <ImageView
-            android:id="@+id/ivLogo"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="16dp"
-            android:src="@drawable/ic_goodfood_logo"
-            android:contentDescription="@string/logo_description" />
-
-        <TextView
-            android:id="@+id/tvHeader"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/ivLogo"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="16dp"
-            android:text="@string/view_post_title"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/black" />
-    </RelativeLayout>
-
-    <!-- UserName with user picture -->
+    <!-- Main Content Layout -->
     <LinearLayout
+        android:id="@+id/mainContent"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="16dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/ivUserPicture"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_default_user_profile"
-            android:layout_marginEnd="8dp"
-            android:contentDescription="@string/user_picture_description" />
-
-        <TextView
-            android:id="@+id/tvUserName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/view_post_username"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:fontFamily="sans-serif-light" />
-    </LinearLayout>
-
-    <!-- Publish Date -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="16dp">
-
-        <TextView
-            android:id="@+id/tvPublishDateLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/publish_date_title"
-            android:textSize="16sp"
-            android:textColor="#808080"
-            android:layout_marginEnd="8dp"
-            android:fontFamily="sans-serif-light" />
-
-        <TextView
-            android:id="@+id/tvPublishDate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/post_publish_date"
-            android:textSize="16sp"
-            android:textColor="#808080"
-            android:fontFamily="sans-serif-light" />
-    </LinearLayout>
-
-    <!-- Recipe Image -->
-    <ImageView
-        android:id="@+id/ivRecipeImage"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:contentDescription="@string/recipe_image"
-        android:src="@drawable/ic_recipe_placeholder"
-        android:layout_gravity="center_horizontal"
-        android:scaleType="centerCrop"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Scrollable Content Text inside ScrollView -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fillViewport="true">
-
-        <TextView
-            android:id="@+id/tvContent"
+        <!-- Header Layout with Logo and Title -->
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/content_view_post"
-            android:textColor="@color/black"
-            android:textSize="16sp"
-            android:padding="12dp"
-            android:scrollbars="vertical"
-            android:gravity="top"
-            android:fontFamily="sans-serif-light"
-            android:focusable="true"
-            android:focusableInTouchMode="true" />
-    </ScrollView>
-</LinearLayout>
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp"
+            android:background="@color/white">
+
+            <ImageView
+                android:id="@+id/ivLogo"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/ic_goodfood_logo"
+                android:contentDescription="@string/logo_description" />
+
+            <TextView
+                android:id="@+id/tvHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/ivLogo"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="16dp"
+                android:text="@string/view_post_title"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+        </RelativeLayout>
+
+        <!-- UserName with user picture -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <ImageView
+                android:id="@+id/ivUserPicture"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_default_user_profile"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="@string/user_picture_description" />
+
+            <TextView
+                android:id="@+id/tvUserName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/view_post_username"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:fontFamily="sans-serif-light" />
+        </LinearLayout>
+
+        <!-- Publish Date -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvPublishDateLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/publish_date_title"
+                android:textSize="16sp"
+                android:textColor="#808080"
+                android:layout_marginEnd="8dp"
+                android:fontFamily="sans-serif-light" />
+
+            <TextView
+                android:id="@+id/tvPublishDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/post_publish_date"
+                android:textSize="16sp"
+                android:textColor="#808080"
+                android:fontFamily="sans-serif-light" />
+        </LinearLayout>
+
+        <!-- Recipe Image -->
+        <ImageView
+            android:id="@+id/ivRecipeImage"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:contentDescription="@string/recipe_image"
+            android:src="@drawable/ic_recipe_placeholder"
+            android:layout_gravity="center_horizontal"
+            android:scaleType="centerCrop"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Scrollable Content Text inside ScrollView -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/tvContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/content_view_post"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:padding="12dp"
+                android:scrollbars="vertical"
+                android:gravity="top"
+                android:fontFamily="sans-serif-light"
+                android:focusable="true"
+                android:focusableInTouchMode="true" />
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- ProgressBar to indicate loading -->
+    <include layout="@layout/layout_loading_overlay" />
+</FrameLayout>

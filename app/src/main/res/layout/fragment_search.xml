@@ -60,4 +60,6 @@
         android:padding="8dp"
         android:clipToPadding="false" />
 
+    <include layout="@layout/layout_loading_overlay" />
+
 </LinearLayout>

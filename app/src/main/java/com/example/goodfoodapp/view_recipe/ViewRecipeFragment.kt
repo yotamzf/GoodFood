@@ -5,35 +5,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
-import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.databinding.FragmentViewRecipeBinding
-import com.example.goodfoodapp.models.Recipe
-import com.example.goodfoodapp.viewmodels.RecipeViewModel
-import com.example.goodfoodapp.viewmodels.RecipeViewModelFactory
-import com.example.goodfoodapp.viewmodels.UserViewModel
-import com.example.goodfoodapp.viewmodels.UserViewModelFactory
+import com.example.goodfoodapp.models.FirestoreRecipe
+import com.example.goodfoodapp.models.User
+import com.example.goodfoodapp.utils.showLoadingOverlay
+import com.example.goodfoodapp.utils.hideLoadingOverlay
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.firestore.FirebaseFirestore
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ViewRecipeFragment : Fragment() {
 
     private var _binding: FragmentViewRecipeBinding? = null
     private val binding get() = _binding!!
 
-    // Get arguments passed via SafeArgs
-    private val args: ViewRecipeFragmentArgs by navArgs()
+    private val args: ViewRecipeFragmentArgs by navArgs()  // SafeArgs to get the recipeId passed
 
-    // Initialize ViewModels for Recipe and User
-    private val recipeViewModel: RecipeViewModel by viewModels {
-        RecipeViewModelFactory((requireActivity().application as GoodFoodApp).recipeRepository)
-    }
-    private val userViewModel: UserViewModel by viewModels {
-        UserViewModelFactory((requireActivity().application as GoodFoodApp).userRepository)
-    }
+    private val firestore by lazy { FirebaseFirestore.getInstance() }  // Firestore instance
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,58 +38,103 @@ class ViewRecipeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Get the recipe ID passed as SafeArg
+        // Show the loading spinner and blur on the parent layout (loading_overlay)
+        binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
+
+        // Get the recipe ID from the arguments
         val recipeId = args.recipeId
 
-        // Attempt to load recipe from local storage, otherwise fallback to Firestore
-        loadRecipeData(recipeId)
+        // Fetch the recipe details
+        fetchRecipeDetails(recipeId)
     }
 
-    // Function to load recipe data
-    private fun loadRecipeData(recipeId: String) {
-        // Observe the recipe data
-        recipeViewModel.getRecipeById(recipeId)
-        recipeViewModel.recipe.observe(viewLifecycleOwner) { recipe ->
-            if (recipe != null) {
-                // Display recipe data
-                displayRecipeData(recipe)
-                // Fetch the user data once recipe data is available
-                loadUserData(recipe.userId)
+    private fun fetchRecipeDetails(recipeId: String) {
+        firestore.collection("recipes").document(recipeId).get()
+            .addOnSuccessListener { documentSnapshot ->
+                val recipe = documentSnapshot.toObject(FirestoreRecipe::class.java)
+
+                if (recipe != null) {
+                    // Bind recipe details to the views
+                    displayRecipeDetails(recipe)
+
+                    // Fetch user details using the userId from the recipe
+                    fetchUserDetails(recipe.userId)
+                }
             }
-        }
-    }
-
-    // Function to load user data
-    private fun loadUserData(userId: String) {
-        userViewModel.getUserById(userId)
-        userViewModel.user.observe(viewLifecycleOwner) { user ->
-            user?.let {
-                // Display user name and profile picture using Picasso
-                binding.tvUserName.text = user.name
-                Picasso.get().load(user.profilePic)
-                    .placeholder(R.drawable.ic_default_user_profile)
-                    .into(binding.ivUserPicture)
+            .addOnFailureListener { exception ->
+                // Handle any errors and hide the spinner and blur
+                showError("Failed to fetch recipe details: ${exception.message}")
+                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
             }
-        }
     }
 
-    // Function to display the recipe data
-    private fun displayRecipeData(recipe: Recipe) {
+    private fun fetchUserDetails(userId: String) {
+        firestore.collection("users").document(userId).get()
+            .addOnSuccessListener { documentSnapshot ->
+                val user = documentSnapshot.toObject(User::class.java)
+
+                if (user != null) {
+                    // Bind user details to the views
+                    displayUserDetails(user)
+                }
+
+                // Hide the loading spinner and blur once all data is loaded
+                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
+            }
+            .addOnFailureListener { exception ->
+                // Handle any errors and hide the spinner and blur
+                showError("Failed to fetch user details: ${exception.message}")
+                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
+            }
+    }
+
+    // Function to display recipe details in the UI
+    private fun displayRecipeDetails(recipe: FirestoreRecipe) {
         binding.tvHeader.text = recipe.title
-        binding.tvPublishDate.text = convertTimestampToDate(recipe.uploadDate)
+        // Convert the Firestore Timestamp to Long for display
+        val uploadDateMillis = recipe.uploadDate?.toDate()?.time ?: 0L
+        binding.tvPublishDate.text = convertTimestampToDate(uploadDateMillis)
         binding.tvContent.text = recipe.content
 
-        // Load recipe image using Picasso
-        Picasso.get()
-            .load(recipe.picture)
-            .placeholder(R.drawable.ic_recipe_placeholder)
-            .into(binding.ivRecipeImage)
+        // Check if the recipe picture is null or empty
+        if (recipe.picture.isNotEmpty()) {
+            // Load recipe image using Picasso if the URL is valid
+            Picasso.get()
+                .load(recipe.picture)
+                .placeholder(R.drawable.ic_recipe_placeholder)
+                .into(binding.ivRecipeImage)
+        } else {
+            // Set a default image if the recipe picture is empty or null
+            binding.ivRecipeImage.setImageResource(R.drawable.ic_recipe_placeholder)
+        }
     }
 
-    // Convert timestamp to date format (helper function)
+    // Function to display user details in the UI
+    private fun displayUserDetails(user: User) {
+        binding.tvUserName.text = user.name
+
+        // Check if the user profile picture is null or empty
+        if (user.profilePic.isNotEmpty()) {
+            // Load user profile picture using Picasso if the URL is valid
+            Picasso.get()
+                .load(user.profilePic)
+                .placeholder(R.drawable.ic_default_user_profile)
+                .into(binding.ivUserPicture)
+        } else {
+            // Set a default profile picture if the user picture is empty or null
+            binding.ivUserPicture.setImageResource(R.drawable.ic_default_user_profile)
+        }
+    }
+
+    // Helper function to convert timestamp (in milliseconds) to date format
     private fun convertTimestampToDate(timestamp: Long): String {
-        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(timestamp))
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        return sdf.format(Date(timestamp))
+    }
+
+    // Function to handle errors and display messages
+    private fun showError(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
     }
 
     override fun onDestroyView() {

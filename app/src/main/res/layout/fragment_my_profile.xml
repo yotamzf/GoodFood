@@ -132,4 +132,6 @@
             android:textColor="@android:color/white" />
     </LinearLayout>
 
+    <include layout="@layout/layout_loading_overlay" />
+
 </LinearLayout>

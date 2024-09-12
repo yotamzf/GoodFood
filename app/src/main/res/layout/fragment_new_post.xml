@@ -88,4 +88,6 @@
         android:textColor="@android:color/white"
         android:layout_gravity="center_horizontal" />
 
+    <include layout="@layout/layout_loading_overlay" />
+
 </LinearLayout>

@@ -15,6 +15,8 @@ import androidx.core.widget.addTextChangedListener
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.databinding.FragmentMyProfileBinding
 import com.example.goodfoodapp.utils.CircleTransform
+import com.example.goodfoodapp.utils.showLoadingOverlay
+import com.example.goodfoodapp.utils.hideLoadingOverlay
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 import com.example.goodfoodapp.models.User
@@ -65,7 +67,11 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
         userRepository = UserRepository(userDao, FirebaseFirestore.getInstance())
 
         val user = auth.currentUser
-        user?.let { loadUserData(it.uid) }
+        user?.let {
+            // Show the loading spinner while fetching user data
+            binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
+            loadUserData(it.uid)
+        }
 
         setupImagePicker()
 
@@ -78,7 +84,13 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
         binding.nameEdit.addTextChangedListener { checkForChanges() }
 
         // Save user data
-        binding.btnSaveChanges.setOnClickListener { user?.let { saveUserData(it.uid) } }
+        binding.btnSaveChanges.setOnClickListener {
+            user?.let {
+                // Show spinner while saving data
+                binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
+                saveUserData(it.uid)
+            }
+        }
 
         // Change profile picture
         binding.changePictureIcon.setOnClickListener { openImagePicker() }
@@ -135,6 +147,11 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
                 requireActivity().runOnUiThread {
                     showMessage("Failed to load user data: ${e.message}")
                 }
+            } finally {
+                // Hide the loading spinner after data is loaded
+                requireActivity().runOnUiThread {
+                    binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
+                }
             }
         }
     }
@@ -180,7 +197,7 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
     }
 
     private fun saveUserData(uid: String) {
-        val updatedName = binding.nameEdit.text.toString()
+        val updatedName = binding.nameEdit.text.toString().trim()
 
         if (profileImageUri != null) {
             // Save the image locally first
@@ -217,6 +234,7 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
         }
     }
 
+
     private fun saveImageLocally(uri: Uri): String {
         val inputStream: InputStream? = requireActivity().contentResolver.openInputStream(uri)
         val file = File(requireContext().filesDir, "profile_pic.jpg")
@@ -231,6 +249,7 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
         return file.absolutePath
     }
 
+
     private fun updateUserData(user: User) {
         // Update Firestore and local Room database
         CoroutineScope(Dispatchers.IO).launch {
@@ -239,10 +258,18 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
                 requireActivity().runOnUiThread {
                     showMessage("Changes saved successfully.")
                     disableButtons()
+
+                    // Reload the user data from the database to refresh the screen
+                    loadUserData(user.userId)
                 }
             } catch (e: Exception) {
                 requireActivity().runOnUiThread {
                     showMessage("Failed to save user data: ${e.message}")
+                }
+            } finally {
+                // Hide the loading spinner after saving
+                requireActivity().runOnUiThread {
+                    binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
                 }
             }
         }
@@ -297,16 +324,5 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    // Helper method to get file path from URI
-    private fun getRealPathFromURI(uri: Uri?): String {
-        val projection = arrayOf(android.provider.MediaStore.Images.Media.DATA)
-        val cursor = requireActivity().contentResolver.query(uri!!, projection, null, null, null)
-        val columnIndex = cursor?.getColumnIndexOrThrow(android.provider.MediaStore.Images.Media.DATA)
-        cursor?.moveToFirst()
-        val path = cursor?.getString(columnIndex!!)
-        cursor?.close()
-        return path ?: ""
     }
 }

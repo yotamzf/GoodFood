@@ -14,6 +14,8 @@ import com.example.goodfoodapp.R
 import com.example.goodfoodapp.databinding.FragmentMyRecipesBinding
 import com.example.goodfoodapp.models.Recipe
 import com.example.goodfoodapp.models.RecipeWithUser
+import com.example.goodfoodapp.utils.hideLoadingOverlay
+import com.example.goodfoodapp.utils.showLoadingOverlay
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
@@ -47,6 +49,9 @@ class MyRecipesFragment : Fragment() {
 
         auth = FirebaseAuth.getInstance()
 
+        // Show the loading spinner and blur effect
+        binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
+
         // Setup RecyclerView
         binding.rvRecipes.layoutManager = LinearLayoutManager(requireContext())
         recipesAdapter = RecipesAdapter(
@@ -65,8 +70,14 @@ class MyRecipesFragment : Fragment() {
     private fun fetchUserRecipes() {
         val userId = auth.currentUser?.uid ?: return
         CoroutineScope(Dispatchers.Main).launch {
-            val recipes = recipeRepository.getRecipesByUser(userId)
-            recipesAdapter.submitList(recipes)
+            try {
+                // Fetch recipes from the repository
+                val recipes = recipeRepository.getRecipesByUser(userId)
+                recipesAdapter.submitList(recipes)
+            } finally {
+                // Hide the loading spinner and blur effect after the data is loaded
+                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
+            }
         }
     }
 

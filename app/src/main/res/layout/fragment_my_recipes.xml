@@ -48,4 +48,6 @@
         android:clipToPadding="false"
         android:background="@color/white" />
 
+    <include layout="@layout/layout_loading_overlay" />
+
 </LinearLayout>

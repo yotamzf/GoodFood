@@ -19,6 +19,8 @@ import com.example.goodfoodapp.dal.room.dao.RecipeDao
 import com.example.goodfoodapp.databinding.FragmentSearchBinding
 import com.example.goodfoodapp.models.RecipeWithUser
 import com.example.goodfoodapp.my_recipes.RecipesAdapter
+import com.example.goodfoodapp.utils.hideLoadingOverlay
+import com.example.goodfoodapp.utils.showLoadingOverlay
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -54,6 +56,9 @@ class SearchFragment : Fragment() {
             db = FirebaseFirestore.getInstance()
         )
 
+        // Show the loading spinner and blur effect
+        binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
+
         // Setup RecyclerView
         binding.rvSearchResults.layoutManager = LinearLayoutManager(requireContext())
         recipesAdapter = RecipesAdapter(
@@ -75,14 +80,14 @@ class SearchFragment : Fragment() {
         // Set search button click listener
         searchButton.setOnClickListener {
             val query = searchEditText.text.toString()
-            searchAllRecipes(query)
+            performSearch(query)
         }
 
         // Add a text change listener to handle "on type" search
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 val query = s.toString()
-                searchAllRecipes(query)
+                performSearch(query)
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
@@ -98,13 +103,22 @@ class SearchFragment : Fragment() {
     // Function to fetch all recipes with user details
     private fun fetchAllRecipes() {
         lifecycleScope.launch {
-            val recipes = recipeRepository.getAllRecipesWithUserDetails()
-            recipesAdapter.submitList(recipes)
+            try {
+                // Fetch all recipes
+                val recipes = recipeRepository.getAllRecipesWithUserDetails()
+                recipesAdapter.submitList(recipes)
+            } finally {
+                // Hide the spinner once data is loaded
+                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
+            }
         }
     }
 
-    // Function to search all recipes
-    private fun searchAllRecipes(query: String) {
+    // Function to perform search
+    private fun performSearch(query: String) {
+        // Show the spinner while searching
+        binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
+
         lifecycleScope.launch {
             try {
                 // Perform the search in the Room database
@@ -115,6 +129,9 @@ class SearchFragment : Fragment() {
                 recipesAdapter.submitList(localRecipes)
             } catch (e: Exception) {
                 e.printStackTrace() // Handle exceptions if necessary
+            } finally {
+                // Hide the spinner once the search is completed
+                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
             }
         }
     }

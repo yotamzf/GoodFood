@@ -20,6 +20,8 @@ import com.example.goodfoodapp.dal.services.ImgurApiService
 import com.example.goodfoodapp.databinding.FragmentNewPostBinding
 import com.example.goodfoodapp.models.Recipe
 import com.example.goodfoodapp.utils.Validator
+import com.example.goodfoodapp.utils.showLoadingOverlay
+import com.example.goodfoodapp.utils.hideLoadingOverlay
 import com.example.goodfoodapp.viewmodels.RecipeViewModel
 import com.example.goodfoodapp.viewmodels.RecipeViewModelFactory
 import com.google.android.material.snackbar.Snackbar
@@ -66,6 +68,9 @@ class NewPostFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Show the loading spinner on fragment creation
+        binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
+
         // Initialize ViewModel
         val repository = (activity?.application as GoodFoodApp).recipeRepository
         val factory = RecipeViewModelFactory(repository)
@@ -83,11 +88,16 @@ class NewPostFragment : Fragment() {
 
         if (isEdit) {
             populateFields()
+        } else {
+            // Hide the spinner if it's a new post
+            binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
         }
 
         binding.btnShare.setOnClickListener {
             if (isValidRecipe()) {
-                uploadImageToImgurAndSubmitRecipe(imgurApiService)  // Upload the image to Imgur before submitting the recipe
+                // Show the spinner while uploading and submitting the recipe
+                binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
+                uploadImageToImgurAndSubmitRecipe(imgurApiService)
                 hasSubmitted = true
             }
         }
@@ -127,6 +137,9 @@ class NewPostFragment : Fragment() {
                 } else {
                     binding.ivRecipeImage.setImageResource(R.drawable.ic_recipe_placeholder)
                 }
+
+                // Hide the spinner once the data is fully loaded
+                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
             }
         }
 
@@ -145,6 +158,7 @@ class NewPostFragment : Fragment() {
             submitRecipe(imageUrl)
         }, { errorMessage ->
             Snackbar.make(binding.root, "Failed to upload image: $errorMessage", Snackbar.LENGTH_LONG).show()
+            binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay() // Hide the spinner on failure
         })
     }
 
@@ -172,6 +186,8 @@ class NewPostFragment : Fragment() {
             } else {
                 showErrorDialog("Recipe with this ID already exists.")
             }
+            // Hide the spinner after submitting the recipe
+            binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
         }
     }
 
@@ -232,6 +248,4 @@ class NewPostFragment : Fragment() {
             .create()
             .show()
     }
-
-
 }
