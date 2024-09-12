@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.goodfoodapp.R
-import com.example.goodfoodapp.models.Recipe
 import com.example.goodfoodapp.models.RecipeWithUser
 import com.squareup.picasso.Picasso
 
@@ -18,7 +17,8 @@ class RecipesAdapter(
     private val showEditAndDeleteButtons: Boolean,
     private val showAuthor: Boolean,
     private val onDeleteClick: (RecipeWithUser) -> Unit,
-    private val onEditClick: (RecipeWithUser) -> Unit
+    private val onEditClick: (RecipeWithUser) -> Unit,
+    private val onRecipeClick: (RecipeWithUser) -> Unit // Listener for recipe item click
 ) : ListAdapter<RecipeWithUser, RecipesAdapter.RecipeViewHolder>(RecipeDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecipeViewHolder {
@@ -28,7 +28,7 @@ class RecipesAdapter(
 
     override fun onBindViewHolder(holder: RecipeViewHolder, position: Int) {
         val recipe = getItem(position)
-        holder.bind(recipe, showEditAndDeleteButtons, showAuthor, onDeleteClick, onEditClick)
+        holder.bind(recipe, showEditAndDeleteButtons, showAuthor, onDeleteClick, onEditClick, onRecipeClick) // Pass onRecipeClick
     }
 
     class RecipeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -37,7 +37,8 @@ class RecipesAdapter(
             showEditAndDeleteButtons: Boolean,
             showAuthor: Boolean,
             onDeleteClick: (RecipeWithUser) -> Unit,
-            onEditClick: (RecipeWithUser) -> Unit
+            onEditClick: (RecipeWithUser) -> Unit,
+            onRecipeClick: (RecipeWithUser) -> Unit // Handle recipe item click
         ) {
             // Bind data to the views
             val recipeImage = itemView.findViewById<ImageView>(R.id.ivRecipeImage)
@@ -67,8 +68,14 @@ class RecipesAdapter(
             deleteButton.visibility = if (showEditAndDeleteButtons) View.VISIBLE else View.GONE
             recipeAuthor.visibility = if (showAuthor) View.VISIBLE else View.GONE
 
+            // Handle edit and delete button clicks
             editButton.setOnClickListener { onEditClick(recipe) }
             deleteButton.setOnClickListener { onDeleteClick(recipe) }
+
+            // Handle recipe item click
+            itemView.setOnClickListener {
+                onRecipeClick(recipe) // Trigger navigation to ViewRecipeFragment
+            }
         }
     }
 

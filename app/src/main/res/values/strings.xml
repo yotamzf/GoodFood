@@ -33,4 +33,10 @@
     <string name="title">Title</string>
     <string name="create_post">Create Post</string>
     <string name="edit_post">Edit Post</string>
+    <string name="user_picture_description">User Picture</string>
+    <string name="content_view_post">Content</string>
+    <string name="post_publish_date">Publish Date</string>
+    <string name="publish_date_title">Publish Date:</string>
+    <string name="view_post_title">Title</string>
+    <string name="view_post_username">User Name</string>
 </resources>

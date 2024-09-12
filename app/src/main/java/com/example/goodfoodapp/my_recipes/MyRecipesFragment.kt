@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.databinding.FragmentMyRecipesBinding
 import com.example.goodfoodapp.models.Recipe
+import com.example.goodfoodapp.models.RecipeWithUser
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
@@ -52,7 +53,8 @@ class MyRecipesFragment : Fragment() {
             showEditAndDeleteButtons = true,
             showAuthor = false,
             onDeleteClick = { recipe -> showDeleteConfirmationDialog(recipe) },
-            onEditClick = { recipe -> editRecipe(recipe) }
+            onEditClick = { recipe -> editRecipe(recipe) },
+            onRecipeClick = { recipe -> viewRecipe(recipe) } // Handle click to view recipe
         )
         binding.rvRecipes.adapter = recipesAdapter
 
@@ -77,6 +79,16 @@ class MyRecipesFragment : Fragment() {
                 recipeContent = recipe.content,
                 recipePicture = recipe.picture ?: "",
                 isEditMode = true
+            )
+            navController.navigate(action)
+        }
+    }
+
+    private fun viewRecipe(recipe: Recipe) {
+        val navController = findNavController()
+        if (navController.currentDestination?.id == R.id.myRecipesFragment) {
+            val action = MyRecipesFragmentDirections.actionMyRecipesFragmentToViewRecipeFragment(
+                recipe.recipeId
             )
             navController.navigate(action)
         }
@@ -126,7 +138,8 @@ class MyRecipesFragment : Fragment() {
         private val showEditAndDeleteButtons: Boolean,
         private val showAuthor: Boolean,
         private val onDeleteClick: (Recipe) -> Unit,
-        private val onEditClick: (Recipe) -> Unit
+        private val onEditClick: (Recipe) -> Unit,
+        private val onRecipeClick: (Recipe) -> Unit // Added a click listener for recipe items
     ) : RecyclerView.Adapter<RecipesAdapter.RecipeViewHolder>() {
 
         private var recipes: List<Recipe> = listOf()
@@ -183,6 +196,11 @@ class MyRecipesFragment : Fragment() {
                 } else {
                     btnEdit.visibility = View.GONE
                     btnDelete.visibility = View.GONE
+                }
+
+                // Set click listener to view recipe
+                itemView.setOnClickListener {
+                    onRecipeClick(recipe)
                 }
             }
         }
