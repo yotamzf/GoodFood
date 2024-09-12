@@ -26,9 +26,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
-import com.example.goodfoodapp.dal.services.ImgurApiService
+import com.example.goodfoodapp.GoodFoodApp
+import com.example.goodfoodapp.UnsavedChangesListener
+import java.io.FileOutputStream
+import java.io.InputStream
 
-class MyProfileFragment : Fragment() {
+class MyProfileFragment : Fragment(), UnsavedChangesListener {
 
     private var _binding: FragmentMyProfileBinding? = null
     private val binding get() = _binding!!
@@ -40,7 +43,7 @@ class MyProfileFragment : Fragment() {
     private var originalUser: User? = null  // Store original user data to compare
     private var isEditingName = false  // Track if the name is editable
     private lateinit var imagePickerLauncher: ActivityResultLauncher<Intent>
-    private lateinit var imgurApiService: ImgurApiService
+    private val imgurApiService = GoodFoodApp.instance.imgurApiService
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -60,9 +63,6 @@ class MyProfileFragment : Fragment() {
         auth = FirebaseAuth.getInstance()
         val userDao = AppDatabase.getInstance(requireContext()).userDao()
         userRepository = UserRepository(userDao, FirebaseFirestore.getInstance())
-
-        // Initialize Imgur API service
-        imgurApiService = ImgurApiService("your-client-id")  // Add your Imgur client ID here
 
         val user = auth.currentUser
         user?.let { loadUserData(it.uid) }
@@ -183,10 +183,13 @@ class MyProfileFragment : Fragment() {
         val updatedName = binding.nameEdit.text.toString()
 
         if (profileImageUri != null) {
-            // Get the file from the URI (assuming you have the path)
-            val file = File(getRealPathFromURI(profileImageUri))  // Implement getRealPathFromURI()
+            // Save the image locally first
+            val localImagePath = saveImageLocally(profileImageUri!!)
 
-            // Upload the image to Imgur
+            // Get the file from the local path
+            val file = File(localImagePath)
+
+            // Upload the image to Imgur using the ImgurApiService accessed via GoodFoodApp
             imgurApiService.uploadImage(file, { imageUrl ->
                 // On success, update the user object with the Imgur image link
                 val user = originalUser?.copy(
@@ -212,6 +215,20 @@ class MyProfileFragment : Fragment() {
 
             updateUserData(user)
         }
+    }
+
+    private fun saveImageLocally(uri: Uri): String {
+        val inputStream: InputStream? = requireActivity().contentResolver.openInputStream(uri)
+        val file = File(requireContext().filesDir, "profile_pic.jpg")
+        val outputStream = FileOutputStream(file)
+
+        inputStream?.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        return file.absolutePath
     }
 
     private fun updateUserData(user: User) {
@@ -258,6 +275,23 @@ class MyProfileFragment : Fragment() {
 
     private fun showMessage(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+    }
+
+    override fun hasUnsavedChanges(): Boolean {
+        val updatedName = binding.nameEdit.text.toString()
+        val currentImageUri = profileImageUri?.toString() ?: originalProfileImageUri?.toString()
+        return (originalUser?.name != updatedName) || (originalProfileImageUri?.toString() != currentImageUri)
+    }
+
+    override fun showUnsavedChangesDialog(onDiscardChanges: () -> Unit) {
+        // Implement the dialog to warn users about unsaved changes
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setMessage("You have unsaved changes. Discard them?")
+            .setPositiveButton("Discard") { _, _ -> onDiscardChanges() }
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.show()
     }
 
     override fun onDestroyView() {

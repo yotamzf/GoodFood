@@ -120,6 +120,7 @@ class LogIn : Fragment() {
         }
     }
 
+
     private fun showToast(message: String) {
         lifecycleScope.launch(Dispatchers.Main) {
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()

@@ -43,11 +43,16 @@ class MainActivity : AppCompatActivity() {
         if (auth.currentUser != null) {
             // User is logged in, navigate to Profile
             navController.navigate(R.id.myProfileFragment)
+
+            // Ensure BottomNavigationView shows "My Profile" as selected
+            val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
+            bottomNavigationView.selectedItemId = R.id.nav_my_profile
         } else {
             // User not logged in, navigate to Login
             navController.navigate(R.id.loginFragment)
         }
     }
+
 
     // Setup Bottom Navigation and Navigation Controller
     private fun setupNavigation() {
@@ -103,7 +108,12 @@ class MainActivity : AppCompatActivity() {
             userRepository.clearAllUsers() // Clear all user data
         }
         navController.navigate(R.id.loginFragment)
+
+        // Hide BottomNavigationView after logout
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
+        bottomNavigationView.visibility = View.GONE
     }
+
 
     private fun findNavController(): NavController {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
