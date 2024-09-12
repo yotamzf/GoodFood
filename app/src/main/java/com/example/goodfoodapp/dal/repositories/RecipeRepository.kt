@@ -12,7 +12,12 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.*
 
-class RecipeRepository(private val recipeDao: RecipeDao, private val db: FirebaseFirestore) {
+class RecipeRepository(
+    private val recipeDao: RecipeDao,
+    private val db: FirebaseFirestore
+) {
+
+    private val FRESHNESS_THRESHOLD = 10 * 60 * 1000L // 10 minutes in milliseconds
 
     // Insert recipe locally in Room database
     suspend fun insertRecipeLocally(recipe: Recipe) {
@@ -21,10 +26,15 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val db: Firebas
         }
     }
 
-    // Corrected return type to Recipe?
+    // Get recipe locally from Room and check freshness
     suspend fun getRecipeLocally(recipeId: String): Recipe? {
         return withContext(Dispatchers.IO) {
-            recipeDao.getRecipeById(recipeId)  // Return the recipe from Room database
+            val recipe = recipeDao.getRecipeById(recipeId)
+            if (recipe != null && !isDataStale(recipe.uploadDate)) {
+                return@withContext recipe // Return cached recipe if it's still fresh
+            } else {
+                return@withContext null // Return null if the data is stale
+            }
         }
     }
 
@@ -34,7 +44,7 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val db: Firebas
             // Insert recipe into Room
             recipeDao.insertRecipe(recipe)
 
-            // Insert recipe into Firestore
+            // Insert recipe into Firestore with the direct image URL
             val firestoreRecipe = FirestoreRecipe(
                 recipeId = recipe.recipeId,
                 title = recipe.title,
@@ -49,40 +59,58 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val db: Firebas
 
     // Get recipe by ID from Firestore, fallback to Room if necessary
     suspend fun getRecipeById(recipeId: String): Recipe? {
+        // First, try getting the recipe from the local database (Room)
+        val cachedRecipe = getRecipeLocally(recipeId)
+        if (cachedRecipe != null) {
+            return cachedRecipe // Return cached recipe if fresh
+        }
+
+        // If no fresh data in Room, fetch from Firestore
         return try {
-            // Attempt to fetch recipe from Firestore
             val docSnapshot = db.collection("recipes").document(recipeId).get().await()
             val firestoreRecipe = docSnapshot.toObject(FirestoreRecipe::class.java)
-            firestoreRecipe?.toRecipe()
+            val recipe = firestoreRecipe?.toRecipe()
+
+            // Cache the recipe locally in Room
+            if (recipe != null) {
+                insertRecipeLocally(recipe)
+            }
+
+            recipe // Return the recipe
         } catch (e: Exception) {
-            // Fallback to Room if Firestore fails
-            recipeDao.getRecipeById(recipeId)
+            recipeDao.getRecipeById(recipeId) // Return whatever is in Room as a fallback
         }
     }
 
     // Get all recipes by a specific user, prefer fetching from Firestore, fallback to Room
     suspend fun getRecipesByUser(userId: String): List<Recipe> {
+        // First, check the cache in Room
+        val cachedRecipes = recipeDao.getRecipesByUser(userId)
+        if (cachedRecipes.isNotEmpty() && cachedRecipes.all { !isDataStale(it.uploadDate) }) {
+            return cachedRecipes // Return cached recipes if they're all fresh
+        }
+
+        // Otherwise, fetch fresh data from Firestore
         return try {
-            // Fetch recipes from Firestore
             val querySnapshot = db.collection("recipes")
                 .whereEqualTo("userId", userId)
                 .get()
                 .await()
 
-            // Convert Firestore documents to FirestoreRecipe objects, then to Recipe objects
+            // Convert Firestore documents to Recipe objects
             val recipes = querySnapshot.documents.mapNotNull { document ->
                 document.toObject(FirestoreRecipe::class.java)?.toRecipe()
             }
 
-            // Cache recipes locally in Room
-            recipes.forEach { insertRecipeLocally(it) }
-
-            recipes // Return the list from Firestore
-        } catch (e: Exception) {
-            // If Firestore fails, fallback to fetching from Room
-            withContext(Dispatchers.IO) {
-                recipeDao.getRecipesByUser(userId)
+            // Cache fetched recipes in Room
+            recipes.forEach {
+                insertRecipeLocally(it)
             }
+
+            recipes
+        } catch (e: Exception) {
+            // Fallback to Room if Firestore fetch fails
+            cachedRecipes
         }
     }
 
@@ -97,6 +125,7 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val db: Firebas
         }
     }
 
+    // Get all recipes with user details
     suspend fun getAllRecipesWithUserDetails(): List<RecipeWithUser> {
         return withContext(Dispatchers.IO) {
             val recipeWithUserList = mutableListOf<RecipeWithUser>()
@@ -112,13 +141,12 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val db: Firebas
                     val user = userSnapshot.toObject(User::class.java)
 
                     if (user != null) {
-                        // Combine recipe and user data
                         val recipeWithUser = RecipeWithUser(
                             recipeId = recipe.recipeId,
                             title = recipe.title,
                             picture = recipe.picture,
                             content = recipe.content,
-                            uploadDate = recipe.uploadDate?.toDate()?.time ?: 0L,  // Convert Firestore Timestamp to Long
+                            uploadDate = recipe.uploadDate?.toDate()?.time ?: 0L,
                             userId = user.userId,
                             userName = user.name
                         )
@@ -126,13 +154,14 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val db: Firebas
                     }
                 }
             } catch (e: Exception) {
-                // Handle any exceptions here (log or return empty list)
+                // Handle exceptions and return an empty list in case of failure
             }
 
-            recipeWithUserList // Return the list of recipes with user details
+            recipeWithUserList
         }
     }
 
+    // Get all recipes with user details from Room
     suspend fun getAllRecipesWithUserDetailsLocally(): List<RecipeWithUser> {
         return withContext(Dispatchers.IO) {
             recipeDao.getAllRecipesWithUserDetails()
@@ -152,5 +181,11 @@ class RecipeRepository(private val recipeDao: RecipeDao, private val db: Firebas
     // Check if recipe ID exists in Room
     suspend fun checkRecipeIdInRoom(recipeId: String): Boolean {
         return recipeDao.getRecipeById(recipeId) != null
+    }
+
+    // Helper function to check if data is stale
+    private fun isDataStale(uploadDate: Long): Boolean {
+        val currentTime = System.currentTimeMillis()
+        return currentTime - uploadDate > FRESHNESS_THRESHOLD
     }
 }

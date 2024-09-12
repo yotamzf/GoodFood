@@ -6,7 +6,7 @@ import java.util.*
 data class FirestoreRecipe(
     val recipeId: String = "",
     val title: String = "",
-    val picture: String = "",  // Recipe picture URL
+    var picture: String = "",  // Recipe picture URL
     val content: String = "",
     val uploadDate: Timestamp? = null, // Firestore Timestamp
     val userId: String = ""
