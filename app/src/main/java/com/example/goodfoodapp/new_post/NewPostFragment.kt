@@ -220,10 +220,18 @@ class NewPostFragment : Fragment() {
             .setMessage("Are you sure you want to leave without saving the recipe?")
             .setPositiveButton("Yes") { dialog, _ ->
                 dialog.dismiss()
-                Snackbar.make(binding.root, "Changes discarded", Snackbar.LENGTH_LONG).show()
+
+                // Use the activity's view if the fragment's view is null
+                val rootView = view ?: requireActivity().findViewById(android.R.id.content)
+                Snackbar.make(rootView, "Changes discarded", Snackbar.LENGTH_LONG).show()
             }
-            .setNegativeButton("No") { _, _ -> findNavController().navigateUp() }
+            .setNegativeButton("No") { _, _ ->
+                // Keep the user on the same fragment
+                findNavController().navigateUp()
+            }
             .create()
             .show()
     }
+
+
 }
