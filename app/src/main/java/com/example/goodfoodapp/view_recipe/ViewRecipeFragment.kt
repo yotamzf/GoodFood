@@ -50,47 +50,33 @@ class ViewRecipeFragment : Fragment() {
         val recipeId = args.recipeId
 
         // Attempt to load recipe from local storage, otherwise fallback to Firestore
-        lifecycleScope.launch {
-            loadRecipeData(recipeId)
-        }
+        loadRecipeData(recipeId)
     }
 
     // Function to load recipe data
-    private suspend fun loadRecipeData(recipeId: String) {
-        // Try to get the recipe from local Room database first
-        recipeViewModel.fetchRecipeLocally(recipeId)
-
+    private fun loadRecipeData(recipeId: String) {
         // Observe the recipe data
+        recipeViewModel.getRecipeById(recipeId)
         recipeViewModel.recipe.observe(viewLifecycleOwner) { recipe ->
-            // If data is missing, incomplete, or blank, fetch from Firestore
-            if (recipe == null || recipe.title.isBlank() || recipe.picture.isBlank()) {
-                recipeViewModel.getRecipeById(recipeId)
-            } else {
+            if (recipe != null) {
                 // Display recipe data
                 displayRecipeData(recipe)
-            }
-        }
-
-        // Fetch user data for profile picture and name
-        recipeViewModel.recipe.observe(viewLifecycleOwner) { recipe ->
-            recipe?.let {
-                // Launch a coroutine to call the suspend function
-                lifecycleScope.launch {
-                    loadUserData(it.userId)
-                }
+                // Fetch the user data once recipe data is available
+                loadUserData(recipe.userId)
             }
         }
     }
 
     // Function to load user data
-    private suspend fun loadUserData(userId: String) {
+    private fun loadUserData(userId: String) {
         userViewModel.getUserById(userId)
-
         userViewModel.user.observe(viewLifecycleOwner) { user ->
             user?.let {
                 // Display user name and profile picture using Picasso
                 binding.tvUserName.text = user.name
-                Picasso.get().load(user.profilePic).placeholder(R.drawable.ic_default_user_profile).into(binding.ivUserPicture)
+                Picasso.get().load(user.profilePic)
+                    .placeholder(R.drawable.ic_default_user_profile)
+                    .into(binding.ivUserPicture)
             }
         }
     }
@@ -102,7 +88,10 @@ class ViewRecipeFragment : Fragment() {
         binding.tvContent.text = recipe.content
 
         // Load recipe image using Picasso
-        Picasso.get().load(recipe.picture).placeholder(R.drawable.ic_recipe_placeholder).into(binding.ivRecipeImage)
+        Picasso.get()
+            .load(recipe.picture)
+            .placeholder(R.drawable.ic_recipe_placeholder)
+            .into(binding.ivRecipeImage)
     }
 
     // Convert timestamp to date format (helper function)
