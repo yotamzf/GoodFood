@@ -1,6 +1,7 @@
 package com.example.goodfoodapp.view_recipe
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -67,16 +68,28 @@ class ViewRecipeFragment : Fragment() {
         }
     }
 
-    // Function to load user data
     private fun loadUserData(userId: String) {
         userViewModel.getUserById(userId)
         userViewModel.user.observe(viewLifecycleOwner) { user ->
             user?.let {
-                // Display user name and profile picture using Picasso
+                // Set user name
                 binding.tvUserName.text = user.name
-                Picasso.get().load(user.profilePic)
-                    .placeholder(R.drawable.ic_default_user_profile)
-                    .into(binding.ivUserPicture)
+
+                // Check if profile picture URL is not null or empty
+                if (!user.profilePic.isNullOrEmpty()) {
+                    Picasso.get()
+                        .load(user.profilePic)
+                        .placeholder(R.drawable.ic_default_user_profile) // Show default image while loading
+                        .error(R.drawable.ic_default_user_profile) // Show error image if load fails
+                        .into(binding.ivUserPicture)
+                } else {
+                    // Log error or handle case where profile picture URL is null or empty
+                    Log.e("ViewRecipeFragment", "Profile picture URL is null or empty")
+                    // You can also set a default image if the URL is empty
+                    Picasso.get()
+                        .load(R.drawable.ic_default_user_profile)
+                        .into(binding.ivUserPicture)
+                }
             }
         }
     }
