@@ -3,7 +3,39 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@color/white">
+
+    <!-- Header Layout with Logo and Title -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"
+        android:background="@color/white">
+
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="16dp"
+            android:src="@drawable/ic_goodfood_logo"
+            android:contentDescription="@string/logo_description" />
+
+        <!-- Title now says "Title" -->
+        <TextView
+            android:id="@+id/tvHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/ivLogo"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:text="Title"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/black" />
+    </RelativeLayout>
 
     <!-- Image Placeholder -->
     <ImageView
@@ -15,25 +47,18 @@
         android:scaleType="centerCrop"
         android:layout_marginBottom="16dp" />
 
-    <!-- Title Text Field -->
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Title"
-        android:padding="12dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/search_background"
-        android:textSize="16sp" />
-
-    <!-- Content Text Field -->
+    <!-- Content Text Field dynamically adjusting its height to the text length -->
     <TextView
         android:id="@+id/tvContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="CONTENT"
         android:padding="12dp"
-        android:layout_marginBottom="16dp"
         android:background="@drawable/search_background"
-        android:textSize="14sp" />
+        android:textSize="14sp"
+        android:scrollbars="vertical"
+        android:gravity="top"
+        android:inputType="textMultiLine"
+        android:layout_marginBottom="16dp" />
+
 </LinearLayout>
