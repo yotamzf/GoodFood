@@ -1,29 +1,31 @@
 package com.example.goodfoodapp.authenticate
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import com.example.goodfoodapp.R
-import com.example.goodfoodapp.models.User
-import com.example.goodfoodapp.dal.room.AppDatabase
 import com.example.goodfoodapp.dal.repositories.UserRepository
+import com.example.goodfoodapp.dal.room.AppDatabase
+import com.example.goodfoodapp.models.User
 import com.example.goodfoodapp.utils.Validator
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class SignUp : Fragment() {
 
     private lateinit var auth: FirebaseAuth
-    private val validator = Validator() // Initialize the Validator
     private lateinit var userRepository: UserRepository
-    private lateinit var firestore: FirebaseFirestore
+    private val validator = Validator() // Initialize the Validator
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -31,13 +33,10 @@ class SignUp : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_sign_up, container, false)
 
-        // Initialize Firebase Auth
+        // Initialize Firebase Auth and UserRepository
         auth = FirebaseAuth.getInstance()
-
-        // Initialize Firestore and Room (local database)
-        firestore = FirebaseFirestore.getInstance()
-        val userDao = AppDatabase.getInstance(requireContext()).userDao()
-        userRepository = UserRepository(userDao, firestore)
+        val db = AppDatabase.getInstance(requireContext())
+        userRepository = UserRepository(db.userDao(), FirebaseFirestore.getInstance())
 
         val emailEditText = view.findViewById<EditText>(R.id.etEmail)
         val nameEditText = view.findViewById<EditText>(R.id.etName)
@@ -52,11 +51,13 @@ class SignUp : Fragment() {
             val password = passwordEditText.text.toString().trim()
             val repeatPassword = repeatPasswordEditText.text.toString().trim()
 
+            // Validate form inputs before attempting sign-up
             if (validateForm(email, name, password, repeatPassword)) {
                 signUpUser(email, name, password, view)
             }
         }
 
+        // Navigate to Login Fragment when "Already have an account?" is clicked
         loginTextView.setOnClickListener {
             Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
         }
@@ -65,24 +66,26 @@ class SignUp : Fragment() {
     }
 
     private fun validateForm(email: String, name: String, password: String, repeatPassword: String): Boolean {
-        // Use the Validator utility for validation
-        if (!validator.validateEmail(email)) {
-            Toast.makeText(context, "Please enter a valid email", Toast.LENGTH_SHORT).show()
-            return false
+        // Use Validator utility to validate inputs
+        return when {
+            !validator.validateEmail(email) -> {
+                showToast("Please enter a valid email")
+                false
+            }
+            !validator.validateName(name) -> {
+                showToast("Please enter a valid name")
+                false
+            }
+            !validator.validatePassword(password) -> {
+                showToast("Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number")
+                false
+            }
+            !validator.validateConfirmPassword(password, repeatPassword) -> {
+                showToast("Passwords do not match")
+                false
+            }
+            else -> true
         }
-        if (!validator.validateName(name)) {
-            Toast.makeText(context, "Please enter a valid name", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        if (!validator.validatePassword(password)) {
-            Toast.makeText(context, "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number", Toast.LENGTH_LONG).show()
-            return false
-        }
-        if (!validator.validateConfirmPassword(password, repeatPassword)) {
-            Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        return true
     }
 
     private fun signUpUser(email: String, name: String, password: String, view: View) {
@@ -90,43 +93,41 @@ class SignUp : Fragment() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val firebaseUser = task.result?.user
-                    if (firebaseUser != null) {
-                        // Create user object with signup date and placeholder profilePic
-                        val userId = firebaseUser.uid
-                        val profilePicUrl = "" //
+                    firebaseUser?.let { user ->
+                        val userId = user.uid
+                        val profilePicUrl = "" // Placeholder for profile picture
                         val signupDate = System.currentTimeMillis()
-                        val user = User(userId, email, name, profilePicUrl, signupDate)
 
-                        // Save user to Firestore
-                        saveUserToFirestore(user)
+                        val newUser = User(userId, email, name, profilePicUrl, signupDate)
 
-                        // Save user to Room (local cache)
-                        saveUserToLocalDatabase(user)
-
-                        Toast.makeText(context, "Sign Up Successful!", Toast.LENGTH_SHORT).show()
-
-                        // Navigate to the login screen
-                        Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
+                        // Save user to Firestore and local database
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            saveUser(newUser, view)
+                        }
                     }
                 } else {
-                    Toast.makeText(context, "Sign Up Failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    showToast("Sign Up Failed: ${task.exception?.message}")
                 }
             }
     }
 
-    private fun saveUserToFirestore(user: User) {
-        firestore.collection("users").document(user.userId).set(user)
-            .addOnSuccessListener {
-                Toast.makeText(context, "User saved to Firestore", Toast.LENGTH_SHORT).show()
+    private suspend fun saveUser(user: User, view: View) {
+        try {
+            userRepository.updateUser(user) // Cache user locally and update Firestore
+
+            // Navigate to Login Fragment upon successful sign-up
+            lifecycleScope.launch(Dispatchers.Main) {
+                showToast("Sign Up Successful!")
+                Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(context, "Error saving user: ${e.message}", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            lifecycleScope.launch(Dispatchers.Main) {
+                showToast("Error saving user: ${e.message}")
             }
+        }
     }
 
-    private fun saveUserToLocalDatabase(user: User) {
-        GlobalScope.launch(Dispatchers.IO) {
-            userRepository.insertUserLocally(user)
-        }
+    private fun showToast(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 }

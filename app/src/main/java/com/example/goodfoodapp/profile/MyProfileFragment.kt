@@ -5,12 +5,12 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.databinding.FragmentMyProfileBinding
@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import com.example.goodfoodapp.dal.services.ImgurApiService
 
 class MyProfileFragment : Fragment() {
 
@@ -37,8 +38,9 @@ class MyProfileFragment : Fragment() {
     private var profileImageUri: Uri? = null
     private var originalProfileImageUri: Uri? = null  // Store original image URI
     private var originalUser: User? = null  // Store original user data to compare
-    private var isEditingName = false
+    private var isEditingName = false  // Track if the name is editable
     private lateinit var imagePickerLauncher: ActivityResultLauncher<Intent>
+    private lateinit var imgurApiService: ImgurApiService
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,30 +53,44 @@ class MyProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Change status bar color to green as requested
         requireActivity().window.statusBarColor = ContextCompat.getColor(requireContext(), R.color.green_background)
 
         // Initialize Firebase Auth and UserRepository
         auth = FirebaseAuth.getInstance()
-        userRepository = UserRepository(
-            AppDatabase.getInstance(requireContext()).userDao(),
-            FirebaseFirestore.getInstance()
-        )
+        val userDao = AppDatabase.getInstance(requireContext()).userDao()
+        userRepository = UserRepository(userDao, FirebaseFirestore.getInstance())
+
+        // Initialize Imgur API service
+        imgurApiService = ImgurApiService("your-client-id")  // Add your Imgur client ID here
 
         val user = auth.currentUser
         user?.let { loadUserData(it.uid) }
 
-        // Setup image picker for changing profile picture
         setupImagePicker()
 
-        // Initially disable editing and buttons
+        // Initially make nameEdit not editable
         binding.nameEdit.isEnabled = false
         disableButtons()
 
+        // Toggle name editing
         binding.editNameIcon.setOnClickListener { toggleNameEdit() }
         binding.nameEdit.addTextChangedListener { checkForChanges() }
-        binding.changePictureIcon.setOnClickListener { openImagePicker() }
+
+        // Save user data
         binding.btnSaveChanges.setOnClickListener { user?.let { saveUserData(it.uid) } }
-        binding.btnDiscardChanges.setOnClickListener { discardChanges() }
+
+        // Change profile picture
+        binding.changePictureIcon.setOnClickListener { openImagePicker() }
+
+        // Discard changes
+        binding.btnDiscardChanges.setOnClickListener { user?.let { discardChanges(it.uid) } }
+    }
+
+    private fun toggleNameEdit() {
+        isEditingName = !isEditingName
+        binding.nameEdit.isEnabled = isEditingName
+        checkForChanges()
     }
 
     private fun setupImagePicker() {
@@ -83,31 +99,41 @@ class MyProfileFragment : Fragment() {
         ) { result ->
             if (result.resultCode == Activity.RESULT_OK && result.data != null) {
                 profileImageUri = result.data?.data
+
+                // Load selected image into profileImage view using Picasso
                 Picasso.get()
                     .load(profileImageUri)
                     .placeholder(R.drawable.ic_default_user_profile)
                     .error(R.drawable.ic_default_user_profile)
                     .transform(CircleTransform())
                     .into(binding.profileImage)
+
                 checkForChanges()  // Check for changes once the image is picked
             }
         }
     }
 
     private fun loadUserData(uid: String) {
-        // Try to load data from Firestore first
         CoroutineScope(Dispatchers.IO).launch {
-            val remoteUser = userRepository.getUserByIdFromFirestore(uid)
-            if (remoteUser != null) {
-                originalUser = remoteUser  // Store original user data for comparison
-                updateUI(remoteUser)
-                userRepository.insertUserLocally(remoteUser)  // Cache remotely fetched data locally
-            } else {
-                // If Firestore fails, load from local Room (local cache)
+            try {
+                // Load user from local cache (Room) first
                 val cachedUser = userRepository.getUserById(uid)
-                cachedUser?.let {
-                    originalUser = it  // Store original user data for comparison
-                    updateUI(it)
+                if (cachedUser != null) {
+                    originalUser = cachedUser
+                    updateUI(cachedUser)  // Update UI with cached data
+                }
+
+                // Then, attempt to load from Firestore
+                val remoteUser = userRepository.getUserByIdFromFirestore(uid)
+                if (remoteUser != null && remoteUser != cachedUser) {
+                    originalUser = remoteUser
+                    updateUI(remoteUser)  // Update UI with remote data if different
+                    userRepository.insertUserLocally(remoteUser)  // Cache Firestore data locally
+                }
+            } catch (e: Exception) {
+                // Handle any exceptions
+                requireActivity().runOnUiThread {
+                    showMessage("Failed to load user data: ${e.message}")
                 }
             }
         }
@@ -118,109 +144,96 @@ class MyProfileFragment : Fragment() {
             binding.nameEdit.setText(user.name)
             binding.emailEdit.setText(user.email)
 
-            // Check if the profilePic path is not empty and the file exists
-            val profilePicFile = File(user.profilePic)
-            if (profilePicFile.exists()) {
-                // Load the profile picture from the file
+            // Load profile picture with Picasso and CircleTransform
+            if (user.profilePic.isNotEmpty()) {
                 Picasso.get()
-                    .load(profilePicFile)
-                    .placeholder(R.drawable.ic_default_user_profile)  // Placeholder in case loading takes time
-                    .error(R.drawable.ic_default_user_profile)        // Error image if loading fails
-                    .transform(CircleTransform())                    // Apply circular transformation
+                    .load(user.profilePic)
+                    .placeholder(R.drawable.ic_default_user_profile)
+                    .error(R.drawable.ic_default_user_profile)
+                    .transform(CircleTransform())
                     .into(binding.profileImage)
+
+                originalProfileImageUri = Uri.parse(user.profilePic)
             } else {
-                // If the profile picture file doesn't exist, load the default image
                 Picasso.get()
                     .load(R.drawable.ic_default_user_profile)
                     .transform(CircleTransform())
                     .into(binding.profileImage)
             }
 
-            originalProfileImageUri = Uri.parse(user.profilePic) // Store original profile pic URI for comparison
             disableButtons()  // Disable buttons initially after loading data
         }
     }
 
-    private fun toggleNameEdit() {
-        isEditingName = !isEditingName
-        binding.nameEdit.isEnabled = isEditingName
-        checkForChanges()
-    }
-
-    // Check for changes in both name and profile picture separately
     private fun checkForChanges() {
-        if (hasNameChanged() || hasProfilePictureChanged()) {
+        val updatedName = binding.nameEdit.text.toString()
+        val currentImageUri = profileImageUri?.toString() ?: originalProfileImageUri?.toString()
+
+        val hasNameChanged = originalUser?.name != updatedName
+        val hasImageChanged = originalProfileImageUri?.toString() != currentImageUri
+
+        if (hasNameChanged || hasImageChanged) {
             enableButtons()
         } else {
             disableButtons()
         }
     }
 
-    // Check if the profile picture was changed
-    private fun hasProfilePictureChanged(): Boolean {
-        val currentImageUri = profileImageUri?.toString() ?: originalProfileImageUri?.toString()
-        return originalProfileImageUri?.toString() != currentImageUri
-    }
-
-    // Check if the name was changed
-    private fun hasNameChanged(): Boolean {
-        val updatedName = binding.nameEdit.text.toString().trim()
-        return originalUser?.name != updatedName
-    }
-
     private fun saveUserData(uid: String) {
-        val updatedName = binding.nameEdit.text.toString().trim()
-        profileImageUri?.let { uri ->
-            userRepository.cacheImageLocally(requireContext(), uri) { localImagePath ->
-                val updatedUser = User(
-                    uid, binding.emailEdit.text.toString(), updatedName, localImagePath, originalUser?.signupDate ?: System.currentTimeMillis()
-                )
-                saveUserToDbAndFirestore(updatedUser)
-            }
-        } ?: run {
-            val updatedUser = User(
-                uid, binding.emailEdit.text.toString(), updatedName,
-                originalProfileImageUri?.toString() ?: "", originalUser?.signupDate ?: System.currentTimeMillis()
-            )
-            saveUserToDbAndFirestore(updatedUser)
+        val updatedName = binding.nameEdit.text.toString()
+
+        if (profileImageUri != null) {
+            // Get the file from the URI (assuming you have the path)
+            val file = File(getRealPathFromURI(profileImageUri))  // Implement getRealPathFromURI()
+
+            // Upload the image to Imgur
+            imgurApiService.uploadImage(file, { imageUrl ->
+                // On success, update the user object with the Imgur image link
+                val user = originalUser?.copy(
+                    name = updatedName,
+                    profilePic = imageUrl  // Use the Imgur URL instead of local URI
+                ) ?: return@uploadImage
+
+                // Now save the user data to Firestore and Room
+                updateUserData(user)
+
+            }, { error ->
+                // Handle upload error (e.g., show a message)
+                requireActivity().runOnUiThread {
+                    showMessage("Image upload failed: $error")
+                }
+            })
+        } else {
+            // No image was changed, just update the name
+            val user = originalUser?.copy(
+                name = updatedName,
+                profilePic = originalUser?.profilePic ?: ""  // Keep the original picture if no change
+            ) ?: return
+
+            updateUserData(user)
         }
     }
 
-    private fun saveUserToDbAndFirestore(user: User) {
+    private fun updateUserData(user: User) {
+        // Update Firestore and local Room database
         CoroutineScope(Dispatchers.IO).launch {
-            userRepository.updateUser(user, {
-                originalUser = user
+            try {
+                userRepository.updateUser(user)
                 requireActivity().runOnUiThread {
                     showMessage("Changes saved successfully.")
                     disableButtons()
                 }
-            }, {
+            } catch (e: Exception) {
                 requireActivity().runOnUiThread {
-                    showMessage("Failed to save changes.")
+                    showMessage("Failed to save user data: ${e.message}")
                 }
-            })
+            }
         }
     }
 
-    private fun discardChanges() {
-        // Revert profile picture if it was changed
-        if (hasProfilePictureChanged()) {
-            profileImageUri = null  // Reset the selected image
-
-            Picasso.get()
-                .load(originalProfileImageUri)
-                .placeholder(R.drawable.ic_default_user_profile)
-                .error(R.drawable.ic_default_user_profile)
-                .transform(CircleTransform())
-                .into(binding.profileImage)
-        }
-
-        // Revert the name if it was changed
-        if (hasNameChanged()) {
-            binding.nameEdit.setText(originalUser?.name)
-        }
-
-        disableButtons()
+    private fun discardChanges(uid: String) {
+        loadUserData(uid)
+        showMessage("Changes discarded.")
     }
 
     private fun openImagePicker() {
@@ -250,5 +263,16 @@ class MyProfileFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    // Helper method to get file path from URI
+    private fun getRealPathFromURI(uri: Uri?): String {
+        val projection = arrayOf(android.provider.MediaStore.Images.Media.DATA)
+        val cursor = requireActivity().contentResolver.query(uri!!, projection, null, null, null)
+        val columnIndex = cursor?.getColumnIndexOrThrow(android.provider.MediaStore.Images.Media.DATA)
+        cursor?.moveToFirst()
+        val path = cursor?.getString(columnIndex!!)
+        cursor?.close()
+        return path ?: ""
     }
 }

@@ -15,9 +15,6 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE userId = :userId")
     suspend fun getUserById(userId: String): User?
 
-    @Query("SELECT * FROM users")
-    suspend fun getAllUsers(): List<User>
-
     @Query("DELETE FROM users")
     suspend fun clearAllUsers()
 }

@@ -10,7 +10,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.example.goodfoodapp.dal.repositories.UserRepository
 import com.example.goodfoodapp.dal.room.AppDatabase
-import com.example.goodfoodapp.dal.room.dao.UserDao
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,12 +17,9 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
-    // Firebase Authentication
+    // Firebase Authentication and Repository initialized via GoodFoodApp
     private lateinit var auth: FirebaseAuth
-
-    // Repository for handling local storage and Firestore
     private lateinit var userRepository: UserRepository
-    private lateinit var userDao: UserDao  // Define userDao here
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,55 +28,56 @@ class MainActivity : AppCompatActivity() {
         // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
 
-        // Initialize UserDao and UserRepository with Room and Firestore
-        val db = AppDatabase.getInstance(applicationContext)
-        userDao = db.userDao()  // Initialize userDao
-        val firestore = FirebaseFirestore.getInstance()
-        userRepository = UserRepository(userDao, firestore)
+        // Initialize UserRepository using the already initialized instance in GoodFoodApp
+        val goodFoodApp = application as GoodFoodApp
+        userRepository = goodFoodApp.userRepository
 
-        // Find the NavHostFragment and get the NavController from it
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
+        // Set up Navigation
+        setupNavigation()
+        checkUserLoggedInStatus()
+    }
 
-        // Find the BottomNavigationView and set up with NavController
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
-        bottomNavigationView.setupWithNavController(navController)
-
-        // Ensure bottom navigation is hidden on login and sign-up fragments
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            if (destination.id == R.id.loginFragment || destination.id == R.id.signUpFragment) {
-                bottomNavigationView.visibility = View.GONE
-            } else {
-                bottomNavigationView.visibility = View.VISIBLE
-            }
-        }
-
-        // Override default navigation for BottomNavigationView to prevent automatic navigation
-        bottomNavigationView.setOnItemSelectedListener { item ->
-            // Intercept navigation and check for unsaved changes
-            handleNavigation(item.itemId, navController)
-            true
-        }
-
-        // Check if the user is logged in and navigate to the appropriate fragment
+    // Check if user is logged in and navigate to the appropriate fragment
+    private fun checkUserLoggedInStatus() {
+        val navController = findNavController()
         if (auth.currentUser != null) {
-            // If the user is already logged in, navigate to the Profile or Home Fragment
+            // User is logged in, navigate to Profile
             navController.navigate(R.id.myProfileFragment)
-            bottomNavigationView.selectedItemId = R.id.nav_my_profile
         } else {
-            // If the user is not logged in, navigate to the Login Fragment
+            // User not logged in, navigate to Login
             navController.navigate(R.id.loginFragment)
         }
     }
 
-    private fun handleNavigation(itemId: Int, navController: NavController) {
-        // Get the current fragment
-        val currentFragment = supportFragmentManager.primaryNavigationFragment
+    // Setup Bottom Navigation and Navigation Controller
+    private fun setupNavigation() {
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
 
+        bottomNavigationView.setupWithNavController(navController)
+
+        // Hide BottomNavigationView for login and signup fragments
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            bottomNavigationView.visibility = if (destination.id == R.id.loginFragment || destination.id == R.id.signUpFragment) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
+        }
+
+        // Override navigation and handle unsaved changes
+        bottomNavigationView.setOnItemSelectedListener { item ->
+            handleNavigation(item.itemId, navController)
+            true
+        }
+    }
+
+    private fun handleNavigation(itemId: Int, navController: NavController) {
+        val currentFragment = supportFragmentManager.primaryNavigationFragment
         if (currentFragment is UnsavedChangesListener && currentFragment.hasUnsavedChanges()) {
-            // If there are unsaved changes, show the dialog before navigating
+            // Show unsaved changes dialog if needed
             currentFragment.showUnsavedChangesDialog {
-                // Callback for when the user confirms they want to discard changes
                 navigateToDestination(itemId, navController)
             }
         } else {
@@ -95,18 +92,21 @@ class MainActivity : AppCompatActivity() {
             R.id.nav_search -> navController.navigate(R.id.searchFragment)
             R.id.nav_new_post -> navController.navigate(R.id.newPostFragment)
             R.id.nav_my_profile -> navController.navigate(R.id.myProfileFragment)
-            R.id.nav_log_out -> {
-                // Log out the user from Firebase
-                auth.signOut()
-
-                // Clear user data from Room
-                CoroutineScope(Dispatchers.IO).launch {
-                    userDao.clearAllUsers() // Clear all user data
-                }
-
-                // Navigate to login fragment after logging out
-                navController.navigate(R.id.loginFragment)
-            }
+            R.id.nav_log_out -> logOut(navController)
         }
+    }
+
+    private fun logOut(navController: NavController) {
+        // Log out user from Firebase and clear user data from Room
+        auth.signOut()
+        CoroutineScope(Dispatchers.IO).launch {
+            userRepository.clearAllUsers() // Clear all user data
+        }
+        navController.navigate(R.id.loginFragment)
+    }
+
+    private fun findNavController(): NavController {
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        return navHostFragment.navController
     }
 }

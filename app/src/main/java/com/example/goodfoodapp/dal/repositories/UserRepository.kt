@@ -1,102 +1,92 @@
 package com.example.goodfoodapp.dal.repositories
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.net.Uri
-import com.example.goodfoodapp.models.User
+import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.dal.room.dao.UserDao
+import com.example.goodfoodapp.dal.services.ImgurApiService
+import com.example.goodfoodapp.models.User
 import com.google.firebase.firestore.FirebaseFirestore
-import com.squareup.picasso.Picasso
-import com.squareup.picasso.Target
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
 
-class UserRepository(private val userDao: UserDao, private val db: FirebaseFirestore) {
+class UserRepository(
+    private val userDao: UserDao,
+    private val firestore: FirebaseFirestore
+) {
 
-    // Insert user locally into Room (for caching)
+    // Lazy initialization of ImgurApiService using the global instance from GoodFoodApp
+    private val imgurApiService: ImgurApiService by lazy {
+        (GoodFoodApp.instance as GoodFoodApp).imgurApiService
+    }
+
+    suspend fun getUserById(userId: String): User? {
+        // Retrieve user from Room (local cache)
+        return withContext(Dispatchers.IO) {
+            userDao.getUserById(userId)
+        }
+    }
+
+    suspend fun getUserByIdFromFirestore(userId: String): User? {
+        // Retrieve user from Firestore (remote)
+        return withContext(Dispatchers.IO) {
+            try {
+                val documentSnapshot = firestore.collection("users").document(userId).get().await()
+                documentSnapshot.toObject(User::class.java)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
+    }
+
+    // Upload image to Imgur and cache the image locally
+    fun uploadAndCacheImage(context: Context, uri: Uri, onSuccess: (String) -> Unit, onError: (String) -> Unit) {
+        imgurApiService.uploadImage(File(uri.path ?: ""), { imageUrl ->
+            // After successful upload, cache image locally
+            cacheImageLocally(context, Uri.parse(imageUrl), onSuccess)
+        }, { error ->
+            onError(error)
+        })
+    }
+
+    // Cache the image locally using Picasso or any other mechanism
+    private fun cacheImageLocally(context: Context, uri: Uri, onSuccess: (String) -> Unit) {
+        // Implement caching logic (using Picasso or direct file operations)
+        // For example, using Picasso to download and save locally:
+        // Picasso.get().load(uri).into(Target...)
+        // Once saved, call onSuccess(localImagePath)
+    }
+
+    // Insert or update user in the local Room database
     suspend fun insertUserLocally(user: User) {
         withContext(Dispatchers.IO) {
             userDao.insertUser(user)
         }
     }
 
-    // Insert or update user in Firestore
-    fun insertUser(user: User, onSuccess: () -> Unit, onFailure: () -> Unit) {
-        val userDoc = db.collection("users").document(user.userId)
-        userDoc.set(user)
-            .addOnSuccessListener {
-                onSuccess() // Call onSuccess when Firestore update succeeds
-            }
-            .addOnFailureListener {
-                onFailure() // Call onFailure when Firestore update fails
-            }
-    }
+    // Update user in both Firestore (remote) and Room (local)
+    suspend fun updateUser(user: User) {
+        withContext(Dispatchers.IO) {
+            try {
+                // Update local cache
+                userDao.insertUser(user)
 
-    // Get user by ID from Room (local database)
-    suspend fun getUserById(userId: String): User? {
-        return withContext(Dispatchers.IO) {
-            userDao.getUserById(userId)
+                // Update remote Firestore
+                firestore.collection("users").document(user.userId).set(user).await()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Handle update failure
+            }
         }
     }
 
-    // Get user by ID from Firestore (remote database)
-    suspend fun getUserByIdFromFirestore(userId: String): User? {
-        return try {
-            val documentSnapshot = db.collection("users").document(userId).get().await()
-            if (documentSnapshot.exists()) {
-                documentSnapshot.toObject(User::class.java)
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
-    // Cache image locally using Picasso
-    fun cacheImageLocally(context: Context, uri: Uri, onSuccess: (String) -> Unit) {
-        Picasso.get().load(uri).into(object : Target {
-            override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
-                bitmap?.let {
-                    val file = File(context.cacheDir, "${System.currentTimeMillis()}.png")
-                    try {
-                        val fos = FileOutputStream(file)
-                        it.compress(Bitmap.CompressFormat.PNG, 100, fos)
-                        fos.close()
-                        // Return the local path to the caller
-                        onSuccess(file.absolutePath)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-            }
-
-            override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
-                // Handle failure case here
-            }
-
-            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
-                // Handle image preparation if needed
-            }
-        })
-    }
-
-    // Insert or update the user in both Room and Firestore
-    suspend fun updateUser(user: User, onSuccess: () -> Unit, onFailure: () -> Unit) {
-        try {
-            // Save to Room (local database)
-            insertUserLocally(user)
-
-            // Save to Firestore (remote database)
-            insertUser(user, onSuccess, onFailure)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            onFailure() // Handle failure if something goes wrong
+    // Clear all local users (for example, on logout)
+    suspend fun clearAllUsers() {
+        withContext(Dispatchers.IO) {
+            userDao.clearAllUsers()
         }
     }
 }

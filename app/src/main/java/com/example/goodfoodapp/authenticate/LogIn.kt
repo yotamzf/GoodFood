@@ -10,13 +10,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import androidx.lifecycle.lifecycleScope
 import com.example.goodfoodapp.R
-import com.example.goodfoodapp.models.User
 import com.example.goodfoodapp.dal.repositories.UserRepository
 import com.example.goodfoodapp.dal.room.AppDatabase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,7 +25,6 @@ class LogIn : Fragment() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var userRepository: UserRepository
-    private lateinit var bottomNavigationView: BottomNavigationView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,20 +47,10 @@ class LogIn : Fragment() {
             val email = emailEditText.text.toString().trim()
             val password = passwordEditText.text.toString().trim()
 
-            // Check if email or password is empty
-            if (email.isEmpty()) {
-                emailEditText.error = "Email is required"
-                return@setOnClickListener
+            if (validateInputs(email, password, emailEditText, passwordEditText)) {
+                loginWithFirebase(email, password, view)
             }
-
-            if (password.isEmpty()) {
-                passwordEditText.error = "Password is required"
-                return@setOnClickListener
-            }
-
-            loginWithFirebase(email, password, view)
         }
-
 
         // Handle Sign Up Prompt (navigate to sign-up screen)
         signUpTextView.setOnClickListener {
@@ -70,6 +58,27 @@ class LogIn : Fragment() {
         }
 
         return view
+    }
+
+    // Validate email and password inputs
+    private fun validateInputs(
+        email: String,
+        password: String,
+        emailEditText: EditText,
+        passwordEditText: EditText
+    ): Boolean {
+        var isValid = true
+
+        if (email.isEmpty()) {
+            emailEditText.error = "Email is required"
+            isValid = false
+        }
+        if (password.isEmpty()) {
+            passwordEditText.error = "Password is required"
+            isValid = false
+        }
+
+        return isValid
     }
 
     private fun loginWithFirebase(email: String, password: String, view: View) {
@@ -82,13 +91,10 @@ class LogIn : Fragment() {
                     // Fetch user data from Firestore after successful login
                     lifecycleScope.launch(Dispatchers.IO) {
                         try {
-                            val user = fetchUserFromFirestore(userId)
+                            val user = userRepository.getUserByIdFromFirestore(userId)
                             if (user != null) {
-                                // Cache user data locally
-                                userRepository.insertUserLocally(user)
-
-                                // Navigate to My Profile Fragment
-                                navigateToApp(view)
+                                userRepository.updateUser(user) // Cache user data locally
+                                navigateToApp(view) // Navigate to Profile Fragment
                             } else {
                                 showToast("Failed to fetch user data from Firestore")
                             }
@@ -101,16 +107,6 @@ class LogIn : Fragment() {
                     showToast("Login failed. Please check your email or password.")
                 }
             }
-    }
-
-    private suspend fun fetchUserFromFirestore(userId: String): User? {
-        return try {
-            val document = FirebaseFirestore.getInstance().collection("users").document(userId).get().await()
-            document.toObject(User::class.java)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
     }
 
     private fun navigateToApp(view: View) {
