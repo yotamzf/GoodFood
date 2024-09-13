@@ -83,6 +83,8 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
         binding.editNameIcon.setOnClickListener { toggleNameEdit() }
         binding.nameEdit.addTextChangedListener { checkForChanges() }
 
+        binding.emailEdit.isEnabled = false
+
         // Save user data
         binding.btnSaveChanges.setOnClickListener {
             user?.let {
@@ -264,6 +266,11 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
 
                     // Reload the user data from the database to refresh the screen
                     loadUserData(user.userId)
+
+                    // Automatically toggle name field back to non-editable
+                    if (isEditingName) {
+                        toggleNameEdit()  // Return name field to uneditable state
+                    }
                 }
             } catch (e: Exception) {
                 requireActivity().runOnUiThread {
