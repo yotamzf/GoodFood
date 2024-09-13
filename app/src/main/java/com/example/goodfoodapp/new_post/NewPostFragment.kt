@@ -6,6 +6,8 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -104,14 +106,43 @@ class NewPostFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        binding.etTitle.setOnFocusChangeListener { _, _ -> hasChanged = true }
-        binding.etContent.setOnFocusChangeListener { _, _ -> hasChanged = true }
+        binding.etTitle.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                if (isEdit && ::originalRecipe.isInitialized) {
+                    hasChanged = s.toString() != originalRecipe.title
+                } else {
+                    // When creating a new post, mark changes as soon as the user starts typing
+                    hasChanged = !s.isNullOrBlank()
+                }
+            }
+        })
+
+        binding.etContent.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                if (isEdit && ::originalRecipe.isInitialized) {
+                    hasChanged = s.toString() != originalRecipe.content
+                } else {
+                    // Mark changes when creating a new post
+                    hasChanged = !s.isNullOrBlank()
+                }
+            }
+        })
 
         binding.ivRecipeImage.setOnClickListener {
             hasChanged = true
             openImagePicker()
         }
     }
+
+
 
     private fun openImagePicker() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -137,6 +168,9 @@ class NewPostFragment : Fragment() {
                 } else {
                     binding.ivRecipeImage.setImageResource(R.drawable.ic_recipe_placeholder)
                 }
+
+                // Setup text watchers after recipe is initialized
+                setupListeners()
 
                 // Hide the spinner once the data is fully loaded
                 binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
@@ -203,12 +237,19 @@ class NewPostFragment : Fragment() {
 
         recipeViewModel.checkIfRecipeIdExists(recipeId) { exists ->
             if (!exists || isEdit) {
-                // Save the direct image URL
+                // If no new image was selected and it's edit mode, keep the original image URL
+                val finalImageUrl = if (selectedImageUri == null && isEdit) {
+                    originalRecipe.picture
+                } else {
+                    imageUrl // This could be the new image URL or empty string in case of new post
+                }
+
+                // Save the recipe with the final image URL
                 val recipe = Recipe(
                     recipeId = recipeId,
                     title = title,
                     content = content,
-                    picture = imageUrl,  // Save the direct image URL
+                    picture = finalImageUrl,  // Use the original image if no new image was selected
                     uploadDate = System.currentTimeMillis(),
                     userId = userId
                 )
@@ -268,6 +309,7 @@ class NewPostFragment : Fragment() {
             .setMessage("Are you sure you want to leave without saving the recipe?")
             .setPositiveButton("Yes") { dialog, _ ->
                 dialog.dismiss()
+                hasChanged = false
 
                 // Use the activity's view if the fragment's view is null
                 val rootView = view ?: requireActivity().findViewById(android.R.id.content)
