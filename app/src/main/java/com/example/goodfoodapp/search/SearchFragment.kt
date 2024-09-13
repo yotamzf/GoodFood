@@ -74,6 +74,17 @@ class SearchFragment : Fragment() {
         val searchEditText = view.findViewById<EditText>(R.id.etSearch)
         val searchButton = view.findViewById<ImageButton>(R.id.btnSearch)
 
+        searchEditText.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == android.view.KeyEvent.KEYCODE_ENTER && event.action == android.view.KeyEvent.ACTION_DOWN) {
+                // Trigger search action when Enter is pressed
+                val query = searchEditText.text.toString()
+                performSearch(query)
+                true // Consume the Enter key event, so it doesn't go to a new line
+            } else {
+                false // Don't consume other key events
+            }
+        }
+
         // Load all recipes initially
         fetchAllRecipes()
 

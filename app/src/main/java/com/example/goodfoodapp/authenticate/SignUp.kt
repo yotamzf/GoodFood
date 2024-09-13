@@ -8,12 +8,14 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.dal.repositories.UserRepository
 import com.example.goodfoodapp.dal.room.AppDatabase
+import com.example.goodfoodapp.databinding.FragmentSignUpBinding
 import com.example.goodfoodapp.models.User
 import com.example.goodfoodapp.utils.Validator
 import com.google.firebase.auth.FirebaseAuth
@@ -31,19 +33,19 @@ class SignUp : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_sign_up, container, false)
+        val binding = FragmentSignUpBinding.inflate(inflater, container, false)
 
         // Initialize Firebase Auth and UserRepository
         auth = FirebaseAuth.getInstance()
         val db = AppDatabase.getInstance(requireContext())
         userRepository = UserRepository(db.userDao(), FirebaseFirestore.getInstance())
 
-        val emailEditText = view.findViewById<EditText>(R.id.etEmail)
-        val nameEditText = view.findViewById<EditText>(R.id.etName)
-        val passwordEditText = view.findViewById<EditText>(R.id.etPassword)
-        val repeatPasswordEditText = view.findViewById<EditText>(R.id.etRepeatPassword)
-        val signUpButton = view.findViewById<Button>(R.id.btnSignUp)
-        val loginTextView = view.findViewById<TextView>(R.id.tvLogin)
+        val emailEditText = binding.etEmail
+        val nameEditText = binding.etName
+        val passwordEditText = binding.etPassword
+        val repeatPasswordEditText = binding.etRepeatPassword
+        val signUpButton = binding.btnSignUp
+        val loginTextView = binding.tvLogin
 
         signUpButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
@@ -51,41 +53,52 @@ class SignUp : Fragment() {
             val password = passwordEditText.text.toString().trim()
             val repeatPassword = repeatPasswordEditText.text.toString().trim()
 
-            // Validate form inputs before attempting sign-up
-            if (validateForm(email, name, password, repeatPassword)) {
-                signUpUser(email, name, password, view)
+            if (validateForm(email, name, password, repeatPassword, binding)) {
+                signUpUser(email, name, password, binding.root)
             }
         }
 
-        // Navigate to Login Fragment when "Already have an account?" is clicked
         loginTextView.setOnClickListener {
-            Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
+            Navigation.findNavController(binding.root).navigate(R.id.action_signUpFragment_to_loginFragment)
         }
 
-        return view
+        return binding.root
     }
 
-    private fun validateForm(email: String, name: String, password: String, repeatPassword: String): Boolean {
-        // Use Validator utility to validate inputs
-        return when {
-            !validator.validateEmail(email) -> {
-                showToast("Please enter a valid email")
-                false
-            }
-            !validator.validateName(name) -> {
-                showToast("Please enter a valid name")
-                false
-            }
-            !validator.validatePassword(password) -> {
-                showToast("Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number")
-                false
-            }
-            !validator.validateConfirmPassword(password, repeatPassword) -> {
-                showToast("Passwords do not match")
-                false
-            }
-            else -> true
+    private fun validateForm(
+        email: String,
+        name: String,
+        password: String,
+        repeatPassword: String,
+        binding: FragmentSignUpBinding
+    ): Boolean {
+        var isValid = true
+
+        if (!validator.validateEmail(email)) {
+            binding.etEmail.error = "Invalid email"
+            binding.etEmail.setHintTextColor(ContextCompat.getColor(requireContext(), R.color.red))
+            isValid = false
         }
+
+        if (!validator.validateName(name)) {
+            binding.etName.error = "Name can't be empty"
+            binding.etName.setHintTextColor(ContextCompat.getColor(requireContext(), R.color.red))
+            isValid = false
+        }
+
+        if (!validator.validatePassword(password)) {
+            binding.etPassword.error = "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number"
+            binding.etPassword.setHintTextColor(ContextCompat.getColor(requireContext(), R.color.red))
+            isValid = false
+        }
+
+        if (!validator.validateConfirmPassword(password, repeatPassword)) {
+            binding.etRepeatPassword.error = "Passwords do not match"
+            binding.etRepeatPassword.setHintTextColor(ContextCompat.getColor(requireContext(), R.color.red))
+            isValid = false
+        }
+
+        return isValid
     }
 
     private fun signUpUser(email: String, name: String, password: String, view: View) {
@@ -100,7 +113,6 @@ class SignUp : Fragment() {
 
                         val newUser = User(userId, email, name, profilePicUrl, signupDate)
 
-                        // Save user to Firestore and local database
                         lifecycleScope.launch(Dispatchers.IO) {
                             saveUser(newUser, view)
                         }
@@ -113,9 +125,8 @@ class SignUp : Fragment() {
 
     private suspend fun saveUser(user: User, view: View) {
         try {
-            userRepository.updateUser(user) // Cache user locally and update Firestore
+            userRepository.updateUser(user)
 
-            // Navigate to Login Fragment upon successful sign-up
             lifecycleScope.launch(Dispatchers.Main) {
                 showToast("Sign Up Successful!")
                 Navigation.findNavController(view).navigate(R.id.action_signUpFragment_to_loginFragment)
@@ -128,6 +139,6 @@ class SignUp : Fragment() {
     }
 
     private fun showToast(message: String) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 }
