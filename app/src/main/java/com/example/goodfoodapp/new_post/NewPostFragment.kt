@@ -149,18 +149,50 @@ class NewPostFragment : Fragment() {
     private fun isValidRecipe(): Boolean {
         val title = binding.etTitle.text.toString()
         val content = binding.etContent.text.toString()
-        return validator.validateRecipeTitle(title) && validator.validateRecipeContent(content)
+
+        var isValid = true
+
+        if (!validator.validateRecipeTitle(title)) {
+            binding.etTitle.error = "Title can't be empty"
+            binding.etTitle.setHintTextColor(resources.getColor(R.color.red)) // Change hint color to red
+            isValid = false
+        } else {
+            binding.etTitle.error = null // Clear the error when valid
+            binding.etTitle.setHintTextColor(resources.getColor(R.color.black)) // Reset to default color
+        }
+
+        if (!validator.validateRecipeContent(content)) {
+            binding.etContent.error = "Content can't be empty"
+            binding.etContent.setHintTextColor(resources.getColor(R.color.red)) // Change hint color to red
+            isValid = false
+        } else {
+            binding.etContent.error = null // Clear the error when valid
+            binding.etContent.setHintTextColor(resources.getColor(R.color.black)) // Reset to default color
+        }
+
+        return isValid
     }
 
     private fun uploadImageToImgurAndSubmitRecipe(imgurApiService: ImgurApiService) {
+        if (selectedImageUri == null) {
+            // No image selected, submit the recipe without an image
+            submitRecipe("")
+            return
+        }
+
         val imageFile = File(localImagePath)
         imgurApiService.uploadImage(imageFile, { imageUrl ->
-            submitRecipe(imageUrl)
+            requireActivity().runOnUiThread {
+                submitRecipe(imageUrl)
+            }
         }, { errorMessage ->
-            Snackbar.make(binding.root, "Failed to upload image: $errorMessage", Snackbar.LENGTH_LONG).show()
-            binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay() // Hide the spinner on failure
+            requireActivity().runOnUiThread {
+                Snackbar.make(binding.root, "Failed to upload image: $errorMessage", Snackbar.LENGTH_LONG).show()
+                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay() // Hide the spinner on failure
+            }
         })
     }
+
 
     private fun submitRecipe(imageUrl: String) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
