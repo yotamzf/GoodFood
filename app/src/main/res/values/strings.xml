@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false">GoodFoodApp</string>
     <string name="sign_up_title">Sign Up!</string>
     <string name="sign_up_msg">Create your account</string>
@@ -39,4 +39,5 @@
     <string name="publish_date_title">Publish Date:</string>
     <string name="view_post_title">Title</string>
     <string name="view_post_username">User Name</string>
+    <string name="no_recipes_message" tools:ignore="MissingTranslation">You don\'t have recipes yet, click here to create a new recipe!</string>
 </resources>

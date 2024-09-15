@@ -16,6 +16,7 @@ import com.example.goodfoodapp.models.Recipe
 import com.example.goodfoodapp.models.RecipeWithUser
 import com.example.goodfoodapp.utils.hideLoadingOverlay
 import com.example.goodfoodapp.utils.showLoadingOverlay
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
@@ -73,7 +74,22 @@ class MyRecipesFragment : Fragment() {
             try {
                 // Fetch recipes from the repository
                 val recipes = recipeRepository.getRecipesByUser(userId)
-                recipesAdapter.submitList(recipes)
+                if (recipes.isEmpty()) {
+                    binding.rvRecipes.visibility = View.GONE
+                    binding.tvNoRecipes.visibility = View.VISIBLE
+                    binding.tvNoRecipes.setOnClickListener {
+                        // Navigate to the "Create Post" fragment
+                        findNavController().navigate(R.id.action_myRecipesFragment_to_newPostFragment)
+
+                        // Update the bottom navigation bar to select the plus sign item
+                        val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
+                        bottomNavigationView.selectedItemId = R.id.nav_new_post // Replace with the actual ID of the plus sign menu item
+                    }
+                } else {
+                    binding.tvNoRecipes.visibility = View.GONE
+                    binding.rvRecipes.visibility = View.VISIBLE
+                    recipesAdapter.submitList(recipes)
+                }
             } finally {
                 // Hide the loading spinner and blur effect after the data is loaded
                 binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
