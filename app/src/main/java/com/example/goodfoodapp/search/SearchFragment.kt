@@ -52,9 +52,6 @@ class SearchFragment : Fragment() {
         // Observe ViewModel
         observeViewModel()
 
-        // Show loading spinner initially
-        binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
-
         // Setup RecyclerView
         setupRecyclerView()
 
@@ -62,25 +59,13 @@ class SearchFragment : Fragment() {
         val searchEditText = view.findViewById<EditText>(R.id.etSearch)
         val searchButton = view.findViewById<ImageButton>(R.id.btnSearch)
 
-        // Handle Enter key press in the search EditText
-        searchEditText.setOnEditorActionListener { _, actionId, event ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
-                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
-                val query = searchEditText.text.toString()
-                viewModel.performSearch(query)
-                true // Consume the event
-            } else {
-                false // Do not consume the event
-            }
-        }
-
         // Set search button click listener
         searchButton.setOnClickListener {
             val query = searchEditText.text.toString()
             viewModel.performSearch(query)
         }
 
-        // Add a text change listener to handle "on type" search
+        // Performing search on each key stroke
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 val query = s.toString()
@@ -90,6 +75,18 @@ class SearchFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
+
+        // Performing search on "Enter"
+        //        searchEditText.setOnEditorActionListener { _, actionId, event ->
+        //            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+        //                (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
+        //                val query = searchEditText.text.toString()
+        //                viewModel.performSearch(query)
+        //                true
+        //            } else {
+        //                false
+        //            }
+        //        }
 
         // Load all recipes initially
         viewModel.fetchAllRecipes()
