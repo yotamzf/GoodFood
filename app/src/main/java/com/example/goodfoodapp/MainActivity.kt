@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController()
         if (auth.currentUser != null) {
             // User is logged in, navigate to Profile
-            navController.navigate(R.id.myProfileFragment)
+            navController.navigate(R.id.myRecipesFragment)
 
             // Ensure BottomNavigationView shows "My Profile" as selected
             val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
@@ -78,10 +78,10 @@ class MainActivity : AppCompatActivity() {
 
         // Hide BottomNavigationView for login and signup fragments
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            bottomNavigationView.visibility = if (destination.id == R.id.loginFragment || destination.id == R.id.signUpFragment) {
-                View.GONE
+            if (destination.id == R.id.loginFragment || destination.id == R.id.signUpFragment) {
+                bottomNavigationView.visibility = View.GONE
             } else {
-                View.VISIBLE
+                bottomNavigationView.visibility = View.VISIBLE
             }
         }
 

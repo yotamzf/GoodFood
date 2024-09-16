@@ -1,6 +1,7 @@
 package com.example.goodfoodapp.authenticate
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,9 +10,13 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
+import androidx.navigation.findNavController
 import com.example.goodfoodapp.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class LogIn : Fragment() {
 
@@ -31,16 +36,22 @@ class LogIn : Fragment() {
         // Initialize ViewModel without Factory
         logInViewModel = ViewModelProvider(this)[LogInViewModel::class.java]
         logInViewModel.setContext(requireContext()) // Set the context after ViewModel is initialized
+        Log.d("HERE", "here7777777")
 
         // Handle Login Button Click
         loginButton.setOnClickListener {
+            Log.d("HERE", "here33333")
             val email = emailEditText.text.toString().trim()
             val password = passwordEditText.text.toString().trim()
 
             if (logInViewModel.validateInputs(email, password)) {
                 logInViewModel.loginWithFirebase(email, password,
                     onSuccess = { userId ->
+                        Log.d("HERE", "here44444")
+
                         navigateToApp(view)
+                        Log.d("HERE", "here555555")
+
                     },
                     onFailure = { errorMessage ->
                         logInViewModel.showToast(errorMessage)
@@ -59,12 +70,41 @@ class LogIn : Fragment() {
         return view
     }
 
-    private fun navigateToApp(view: View) {
-        // Navigate to My Profile Fragment
-        Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_myProfileFragment)
+//    private fun navigateToApp(view: View) {
+//        // Navigate to My Profile Fragment
+//
+//        Log.d("HERE", "here888888")
+//
+//        // Ensure navigation happens on the main thread
+//        requireActivity().lifecycleScope.launch(Dispatchers.Main) {
+//            val navController = Navigation.findNavController(view)
+//            navController.navigate(R.id.action_loginFragment_to_myRecipesFragment)
+//
+//            Log.d("HERE", "here11111")
+//        }
+//
+//        // Ensure BottomNavigationView is updated
+//        val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
+//        bottomNavigationView.selectedItemId = R.id.nav_my_recipes
+//        bottomNavigationView.visibility = View.VISIBLE
+//
+//        Log.d("HERE", "here22222")
+//
+//    }
 
-        // Ensure BottomNavigationView is updated
-        val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
-        bottomNavigationView.selectedItemId = R.id.nav_my_profile
+    private fun navigateToApp(view: View) {
+        requireActivity().lifecycleScope.launch(Dispatchers.Main) {
+            val navController = Navigation.findNavController(view)
+
+            // Check the current destination to ensure we are navigating correctly
+            if (navController.currentDestination?.id == R.id.loginFragment) {
+                navController.navigate(R.id.action_loginFragment_to_myRecipesFragment)
+
+                // Ensure BottomNavigationView is updated
+                val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
+                bottomNavigationView.selectedItemId = R.id.nav_my_recipes
+                bottomNavigationView.visibility = View.VISIBLE
+            }
+        }
     }
 }
