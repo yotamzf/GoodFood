@@ -28,7 +28,6 @@ interface RecipeDao {
     """)
     suspend fun getRecipesByTitleOrAuthor(query: String): List<Recipe>
 
-
 //    @Transaction
 //    @Query("""
 //        SELECT * FROM recipes
@@ -37,7 +36,6 @@ interface RecipeDao {
 //        )
 //    """)
 //    suspend fun searchRecipesByQuery(query: String): List<RecipeWithUser>
-
 
     @Query("""
         SELECT 

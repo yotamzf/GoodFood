@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.R
@@ -17,7 +16,6 @@ import com.example.goodfoodapp.viewmodels.RecipeViewModelFactory
 import com.example.goodfoodapp.viewmodels.UserViewModel
 import com.example.goodfoodapp.viewmodels.UserViewModelFactory
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.launch
 
 class ViewRecipeFragment : Fragment() {
 

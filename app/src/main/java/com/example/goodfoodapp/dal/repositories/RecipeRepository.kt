@@ -233,13 +233,6 @@ class RecipeRepository(
         }
     }
 
-    // Get all recipes with user details from Room
-//    suspend fun getAllRecipesWithUserDetailsLocally(): List<RecipeWithUser> {
-//        return withContext(Dispatchers.IO) {
-//            recipeDao.getAllRecipesWithUserDetails()
-//        }
-//    }
-
     suspend fun searchRecipesWithUserDetails(query: String): List<RecipeWithUser> {
         return withContext(Dispatchers.IO) {
             try {

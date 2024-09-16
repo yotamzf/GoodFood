@@ -54,7 +54,7 @@ class NewPostFragment : Fragment() {
             selectedImageUri = result.data?.data
             selectedImageUri?.let { uri ->
                 binding.ivRecipeImage.setImageURI(uri)
-                saveImageLocally(uri)  // Save the image locally
+                saveImageLocally(uri)
                 hasChanged = true
             }
         }

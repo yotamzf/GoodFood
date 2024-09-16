@@ -18,7 +18,7 @@ class RecipesAdapter(
     private val showAuthor: Boolean,
     private val onDeleteClick: (RecipeWithUser) -> Unit,
     private val onEditClick: (RecipeWithUser) -> Unit,
-    private val onRecipeClick: (RecipeWithUser) -> Unit // Listener for recipe item click
+    private val onRecipeClick: (RecipeWithUser) -> Unit
 ) : ListAdapter<RecipeWithUser, RecipesAdapter.RecipeViewHolder>(RecipeDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecipeViewHolder {
@@ -28,7 +28,7 @@ class RecipesAdapter(
 
     override fun onBindViewHolder(holder: RecipeViewHolder, position: Int) {
         val recipe = getItem(position)
-        holder.bind(recipe, showEditAndDeleteButtons, showAuthor, onDeleteClick, onEditClick, onRecipeClick) // Pass onRecipeClick
+        holder.bind(recipe, showEditAndDeleteButtons, showAuthor, onDeleteClick, onEditClick, onRecipeClick)
     }
 
     class RecipeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -38,7 +38,7 @@ class RecipesAdapter(
             showAuthor: Boolean,
             onDeleteClick: (RecipeWithUser) -> Unit,
             onEditClick: (RecipeWithUser) -> Unit,
-            onRecipeClick: (RecipeWithUser) -> Unit // Handle recipe item click
+            onRecipeClick: (RecipeWithUser) -> Unit
         ) {
             // Bind data to the views
             val recipeImage = itemView.findViewById<ImageView>(R.id.ivRecipeImage)

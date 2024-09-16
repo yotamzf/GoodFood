@@ -1,7 +1,6 @@
 package com.example.goodfoodapp.models
 
 import com.google.firebase.Timestamp
-import java.util.*
 
 data class FirestoreRecipe(
     val recipeId: String = "",

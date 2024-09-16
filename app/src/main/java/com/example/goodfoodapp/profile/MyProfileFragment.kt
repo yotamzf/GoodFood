@@ -2,7 +2,6 @@ package com.example.goodfoodapp.profile
 
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -116,7 +115,7 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
 
     private fun disableEditing() {
         binding.nameEdit.isEnabled = false
-        disableButtons() // Disable the Save/Discard buttons
+        disableButtons()
     }
 
     private fun toggleNameEdit() {

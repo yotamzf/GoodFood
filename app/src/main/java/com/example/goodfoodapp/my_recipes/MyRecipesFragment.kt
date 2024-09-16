@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.databinding.FragmentMyRecipesBinding
 import com.example.goodfoodapp.models.Recipe
-import com.example.goodfoodapp.models.RecipeWithUser
 import com.example.goodfoodapp.utils.hideLoadingOverlay
 import com.example.goodfoodapp.utils.showLoadingOverlay
 import com.google.android.material.bottomnavigation.BottomNavigationView
