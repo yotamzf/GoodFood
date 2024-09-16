@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
 
             // Ensure BottomNavigationView shows "My Profile" as selected
             val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
-            bottomNavigationView.selectedItemId = R.id.nav_my_profile
+            bottomNavigationView.selectedItemId = R.id.nav_my_recipes
         } else {
             // User not logged in, navigate to Login
             navController.navigate(R.id.loginFragment)
