@@ -1,4 +1,4 @@
-package com.example.goodfoodapp.viewmodels
+package com.example.goodfoodapp.search
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
