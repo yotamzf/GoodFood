@@ -1,6 +1,7 @@
 package com.example.goodfoodapp.profile
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,6 +14,7 @@ import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.databinding.FragmentMyProfileBinding
 import com.example.goodfoodapp.utils.CircleTransform
@@ -27,6 +29,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.UnsavedChangesListener
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MyProfileFragment : Fragment(), UnsavedChangesListener {
 
@@ -36,6 +39,8 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
     private lateinit var auth: FirebaseAuth
     private lateinit var profileViewModel: ProfileViewModel
     private lateinit var imagePickerLauncher: ActivityResultLauncher<Intent>
+    private var hasSubmitted = false
+    private var hasChanged = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -209,17 +214,45 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
     }
 
     override fun showUnsavedChangesDialog(onDiscardChanges: () -> Unit) {
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setMessage("You have unsaved changes. Discard them?")
-            .setPositiveButton("Discard") { _, _ -> onDiscardChanges() }
-            .setNegativeButton("Cancel", null)
-            .create()
+        AlertDialog.Builder(requireContext())
+            .setTitle("Unsaved Changes")
+            .setMessage("Are you sure you want to leave without saving your profile?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                dialog.dismiss()
+                hasChanged = false
 
-        dialog.show()
+                // Use the activity's view if the fragment's view is null
+                val rootView = view ?: requireActivity().findViewById(android.R.id.content)
+                Snackbar.make(rootView, "Changes discarded", Snackbar.LENGTH_LONG).show()
+
+                // Navigate back to the previous screen
+                onDiscardChanges()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss() // Dismiss the dialog and keep the user on the same fragment
+
+                // Determine where to navigate back to based on the current fragment
+                val navController = findNavController()
+
+                navController.navigate(R.id.myProfileFragment)
+
+                val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
+                bottomNavigationView.selectedItemId = R.id.nav_my_profile
+
+            }
+            .create()
+            .show()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        if (!hasSubmitted && hasUnsavedChanges()) {
+            showUnsavedChangesDialog {
+                // Logic to discard changes if user confirms
+                findNavController().navigateUp()
+            }
+        }
         _binding = null
     }
+
 }

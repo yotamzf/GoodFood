@@ -328,6 +328,7 @@ class NewPostFragment : Fragment() {
 
                 when (currentDestination) {
                     R.id.newPostFragment -> {
+                        navController.navigate(R.id.newPostFragment)
                         // Stay on the New Post fragment
                         val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
                         bottomNavigationView.selectedItemId = R.id.nav_new_post
