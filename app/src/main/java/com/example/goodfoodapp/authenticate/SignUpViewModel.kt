@@ -4,6 +4,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.dal.repositories.UserRepository
 import com.example.goodfoodapp.dal.room.AppDatabase
 import com.example.goodfoodapp.models.User
@@ -16,14 +17,12 @@ import kotlinx.coroutines.launch
 class SignUpViewModel : ViewModel() {
 
     private lateinit var context: Context
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private lateinit var userRepository: UserRepository
+    private val auth: FirebaseAuth = GoodFoodApp.instance.firebaseAuth
+    private var userRepository: UserRepository = GoodFoodApp.instance.userRepository
     private val validator = Validator()
 
     fun setContext(context: Context) {
         this.context = context
-        val db = AppDatabase.getInstance(context)
-        userRepository = UserRepository(db.userDao(), FirebaseFirestore.getInstance())
     }
 
     // Provide public methods for validation
