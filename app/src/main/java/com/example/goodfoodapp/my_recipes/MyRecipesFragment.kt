@@ -35,10 +35,7 @@ class MyRecipesFragment : Fragment() {
     private var recipeRepository: RecipeRepository = GoodFoodApp.instance.recipeRepository
     private var auth: FirebaseAuth = GoodFoodApp.instance.firebaseAuth
 
-//    // Access the RecipeRepository from GoodFoodApp
-//    private val recipeRepository by lazy {
-//        (requireActivity().application as com.example.goodfoodapp.GoodFoodApp).recipeRepository
-//    }
+     // Access the RecipeRepository from GoodFoodApp
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

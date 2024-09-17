@@ -78,7 +78,7 @@ class RecipesAdapter(
             }
         }
     }
-
+ 
     class RecipeDiffCallback : DiffUtil.ItemCallback<RecipeWithUser>() {
         override fun areItemsTheSame(oldItem: RecipeWithUser, newItem: RecipeWithUser): Boolean {
             return oldItem.recipeId == newItem.recipeId
