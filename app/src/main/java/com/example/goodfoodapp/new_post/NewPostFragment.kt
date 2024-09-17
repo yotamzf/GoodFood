@@ -1,5 +1,6 @@
 package com.example.goodfoodapp.new_post
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Bitmap
@@ -12,8 +13,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.goodfoodapp.R
@@ -21,10 +23,8 @@ import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.dal.services.ImgurApiService
 import com.example.goodfoodapp.databinding.FragmentNewPostBinding
 import com.example.goodfoodapp.models.Recipe
-import com.example.goodfoodapp.utils.Validator
-import com.example.goodfoodapp.utils.showLoadingOverlay
 import com.example.goodfoodapp.utils.hideLoadingOverlay
-import com.example.goodfoodapp.viewmodels.RecipeViewModel
+import com.example.goodfoodapp.utils.showLoadingOverlay
 import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
 import java.io.File
@@ -35,33 +35,30 @@ import java.util.*
 class NewPostFragment : Fragment() {
 
     private lateinit var binding: FragmentNewPostBinding
-    private lateinit var recipeViewModel: RecipeViewModel
+    private val newPostViewModel: NewPostViewModel by viewModels()
     private val args: NewPostFragmentArgs by navArgs()
-    private var hasChanged = false
-    private var isEdit = false
-    private var hasSubmitted = false
-    private lateinit var originalRecipe: Recipe
-    private var selectedImageUri: Uri? = null
-    private var localImagePath: String = ""
-    private val validator = Validator()
+    private lateinit var imgurApiService: ImgurApiService
 
     // Image picker launcher
     private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            selectedImageUri = result.data?.data
-            selectedImageUri?.let { uri ->
-                binding.ivRecipeImage.setImageURI(uri)
-                saveImageLocally(uri)  // Save the image locally
-                hasChanged = true
+        if (result.resultCode == Activity.RESULT_OK) {
+            val uri = result.data?.data
+            uri?.let {
+                binding.ivRecipeImage.setImageURI(it)
+                saveImageLocally(it)
+                newPostViewModel.setSelectedImageUri(it)
+                newPostViewModel.setHasChanged(true)
             }
         }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         binding = FragmentNewPostBinding.inflate(inflater, container, false)
+        newPostViewModel.binding = binding
+        newPostViewModel.args = args
         return binding.root
     }
 
@@ -71,22 +68,18 @@ class NewPostFragment : Fragment() {
         // Show the loading spinner on fragment creation
         binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
 
-        // Initialize ViewModel
-        recipeViewModel = ViewModelProvider(this)[RecipeViewModel::class.java]
+        // Initialize Imgur API Service
+        imgurApiService = (activity?.application as GoodFoodApp).imgurApiService
 
-        // Set the Imgur API Service from the GoodFoodApp
-        val imgurApiService = (activity?.application as GoodFoodApp).imgurApiService
-
-        isEdit = args.isEditMode
+        newPostViewModel.init(args.isEditMode, args.recipeId)
 
         // Update the header title based on mode
-        binding.tvHeader.text = getString(if (isEdit) R.string.edit_post else R.string.create_post)
+        binding.tvHeader.text = getString(if (args.isEditMode) R.string.edit_post else R.string.create_post)
 
         setupListeners()
+        observeViewModel()
 
-        if (isEdit) {
-            populateFields()
-        } else {
+        if (!args.isEditMode) {
             // Hide the spinner if it's a new post
             binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
         }
@@ -95,8 +88,16 @@ class NewPostFragment : Fragment() {
             if (isValidRecipe()) {
                 // Show the spinner while uploading and submitting the recipe
                 binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
-                uploadImageToImgurAndSubmitRecipe(imgurApiService)
-                hasSubmitted = true
+                newPostViewModel.uploadImageToImgurAndSubmitRecipe(imgurApiService, {
+                    // Success callback
+                    Snackbar.make(binding.root, "Recipe successfully saved!", Snackbar.LENGTH_LONG).show()
+                    findNavController().navigate(NewPostFragmentDirections.actionNewPostFragmentToMyRecipesFragment())
+                }, { errorMessage ->
+                    // Failure callback
+                    Snackbar.make(binding.root, "Failed to upload image: $errorMessage", Snackbar.LENGTH_LONG).show()
+                    binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
+                })
+                newPostViewModel.setHasSubmitted(true)
             }
         }
     }
@@ -108,12 +109,7 @@ class NewPostFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: Editable?) {
-                if (isEdit && ::originalRecipe.isInitialized) {
-                    hasChanged = s.toString() != originalRecipe.title
-                } else {
-                    // When creating a new post, mark changes as soon as the user starts typing
-                    hasChanged = !s.isNullOrBlank()
-                }
+                newPostViewModel.setTitleChanged(s.toString())
             }
         })
 
@@ -123,33 +119,19 @@ class NewPostFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: Editable?) {
-                if (isEdit && ::originalRecipe.isInitialized) {
-                    hasChanged = s.toString() != originalRecipe.content
-                } else {
-                    // Mark changes when creating a new post
-                    hasChanged = !s.isNullOrBlank()
-                }
+                newPostViewModel.setContentChanged(s.toString())
             }
         })
 
         binding.ivRecipeImage.setOnClickListener {
-            hasChanged = true
+            newPostViewModel.setHasChanged(true)
             openImagePicker()
         }
     }
 
-
-
-    private fun openImagePicker() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        imagePickerLauncher.launch(intent)
-    }
-
-    private fun populateFields() {
-        recipeViewModel.recipe.observe(viewLifecycleOwner) { recipe ->
+    private fun observeViewModel() {
+        newPostViewModel.originalRecipe.observe(viewLifecycleOwner) { recipe ->
             if (recipe != null) {
-                originalRecipe = recipe
-
                 if (binding.etTitle.text.isNullOrEmpty()) binding.etTitle.setText(recipe.title)
                 if (binding.etContent.text.isNullOrEmpty()) binding.etContent.setText(recipe.content)
 
@@ -165,15 +147,25 @@ class NewPostFragment : Fragment() {
                     binding.ivRecipeImage.setImageResource(R.drawable.ic_recipe_placeholder)
                 }
 
-                // Setup text watchers after recipe is initialized
-                setupListeners()
-
                 // Hide the spinner once the data is fully loaded
                 binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
             }
         }
 
-        recipeViewModel.getRecipeById(args.recipeId)
+        newPostViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
+            errorMessage?.let {
+                Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show()
+                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
+                newPostViewModel.clearErrorMessage()
+            }
+        }
+
+        newPostViewModel.hasSubmitted.observe(viewLifecycleOwner) { hasSubmitted ->
+            if (hasSubmitted == true) {
+                // Hide the spinner after submitting the recipe
+                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
+            }
+        }
     }
 
     private fun isValidRecipe(): Boolean {
@@ -181,83 +173,32 @@ class NewPostFragment : Fragment() {
         val content = binding.etContent.text.toString()
 
         var isValid = true
+        val validator = newPostViewModel.validator
 
         if (!validator.validateRecipeTitle(title)) {
             binding.etTitle.error = "Title can't be empty"
-            binding.etTitle.setHintTextColor(resources.getColor(R.color.red)) // Change hint color to red
+            binding.etTitle.setHintTextColor(ContextCompat.getColor(requireContext(), R.color.red))
             isValid = false
         } else {
-            binding.etTitle.error = null // Clear the error when valid
-            binding.etTitle.setHintTextColor(resources.getColor(R.color.black)) // Reset to default color
+            binding.etTitle.error = null
+            binding.etTitle.setHintTextColor(ContextCompat.getColor(requireContext(), R.color.black))
         }
 
         if (!validator.validateRecipeContent(content)) {
             binding.etContent.error = "Content can't be empty"
-            binding.etContent.setHintTextColor(resources.getColor(R.color.red)) // Change hint color to red
+            binding.etContent.setHintTextColor(ContextCompat.getColor(requireContext(), R.color.red))
             isValid = false
         } else {
-            binding.etContent.error = null // Clear the error when valid
-            binding.etContent.setHintTextColor(resources.getColor(R.color.black)) // Reset to default color
+            binding.etContent.error = null
+            binding.etContent.setHintTextColor(ContextCompat.getColor(requireContext(), R.color.black))
         }
 
         return isValid
     }
 
-    private fun uploadImageToImgurAndSubmitRecipe(imgurApiService: ImgurApiService) {
-        if (selectedImageUri == null) {
-            // No image selected, submit the recipe without an image
-            submitRecipe("")
-            return
-        }
-
-        val imageFile = File(localImagePath)
-        imgurApiService.uploadImage(imageFile, { imageUrl ->
-            requireActivity().runOnUiThread {
-                submitRecipe(imageUrl)
-            }
-        }, { errorMessage ->
-            requireActivity().runOnUiThread {
-                Snackbar.make(binding.root, "Failed to upload image: $errorMessage", Snackbar.LENGTH_LONG).show()
-                binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay() // Hide the spinner on failure
-            }
-        })
-    }
-
-
-    private fun submitRecipe(imageUrl: String) {
-        val userId = GoodFoodApp.instance.firebaseAuth.currentUser?.uid ?: return
-        val title = binding.etTitle.text.toString()
-        val content = binding.etContent.text.toString()
-
-        val recipeId = if (isEdit) args.recipeId else UUID.randomUUID().toString()
-
-        recipeViewModel.checkIfRecipeIdExists(recipeId) { exists ->
-            if (!exists || isEdit) {
-                // If no new image was selected and it's edit mode, keep the original image URL
-                val finalImageUrl = if (selectedImageUri == null && isEdit) {
-                    originalRecipe.picture
-                } else {
-                    imageUrl // This could be the new image URL or empty string in case of new post
-                }
-
-                // Save the recipe with the final image URL
-                val recipe = Recipe(
-                    recipeId = recipeId,
-                    title = title,
-                    content = content,
-                    picture = finalImageUrl,  // Use the original image if no new image was selected
-                    uploadDate = System.currentTimeMillis(),
-                    userId = userId
-                )
-                recipeViewModel.insertRecipe(recipe)
-                Snackbar.make(binding.root, "Recipe successfully saved!", Snackbar.LENGTH_LONG).show()
-                findNavController().navigate(NewPostFragmentDirections.actionNewPostFragmentToMyRecipesFragment())
-            } else {
-                showErrorDialog("Recipe with this ID already exists.")
-            }
-            // Hide the spinner after submitting the recipe
-            binding.root.findViewById<View>(R.id.loading_overlay)?.hideLoadingOverlay()
-        }
+    private fun openImagePicker() {
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        imagePickerLauncher.launch(intent)
     }
 
     private fun saveImageLocally(uri: Uri) {
@@ -268,7 +209,7 @@ class NewPostFragment : Fragment() {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
             outputStream.flush()
             outputStream.close()
-            localImagePath = file.absolutePath
+            newPostViewModel.setLocalImagePath(file.absolutePath)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -283,18 +224,9 @@ class NewPostFragment : Fragment() {
         }
     }
 
-    private fun showErrorDialog(message: String) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Error")
-            .setMessage(message)
-            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
-            .create()
-            .show()
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
-        if (!hasSubmitted && hasChanged) {
+        if (newPostViewModel.hasChanged.value == true && newPostViewModel.hasSubmitted.value != true) {
             showUnsavedChangesDialog()
         }
     }
@@ -305,14 +237,12 @@ class NewPostFragment : Fragment() {
             .setMessage("Are you sure you want to leave without saving the recipe?")
             .setPositiveButton("Yes") { dialog, _ ->
                 dialog.dismiss()
-                hasChanged = false
-
-                // Use the activity's view if the fragment's view is null
                 val rootView = view ?: requireActivity().findViewById(android.R.id.content)
+
+                newPostViewModel.setHasChanged(false)
                 Snackbar.make(rootView, "Changes discarded", Snackbar.LENGTH_LONG).show()
             }
             .setNegativeButton("No") { _, _ ->
-                // Keep the user on the same fragment
                 findNavController().navigateUp()
             }
             .create()
