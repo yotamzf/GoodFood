@@ -43,10 +43,7 @@ class SearchFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Initialize ViewModel
-        val recipeDao = AppDatabase.getInstance(requireContext()).recipeDao()
-        val repository = RecipeRepository(recipeDao, FirebaseFirestore.getInstance())
         viewModel = ViewModelProvider(this)[SearchViewModel::class.java]
-        viewModel.initialize(repository)
 
         // Observe ViewModel
         observeViewModel()

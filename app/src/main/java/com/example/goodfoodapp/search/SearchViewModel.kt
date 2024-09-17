@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.dal.repositories.RecipeRepository
 import com.example.goodfoodapp.models.RecipeWithUser
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class SearchViewModel() : ViewModel() {
-    private lateinit var recipeRepository: RecipeRepository
+    private var recipeRepository: RecipeRepository = GoodFoodApp.instance.recipeRepository
 
     private val _recipes = MutableLiveData<List<RecipeWithUser>>()
     val recipes: LiveData<List<RecipeWithUser>> get() = _recipes
@@ -19,9 +20,6 @@ class SearchViewModel() : ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> get() = _isLoading
 
-    fun initialize(repository: RecipeRepository) {
-        this.recipeRepository = repository
-    }
 
     fun fetchAllRecipes() {
         _isLoading.value = true
