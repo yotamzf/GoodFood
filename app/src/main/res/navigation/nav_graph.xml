@@ -43,7 +43,7 @@
             app:popUpToInclusive="false" />
         <action
             android:id="@+id/action_myRecipesFragment_to_viewRecipeFragment"
-            app:destination="@+id/viewRecipeFragment"/>
+            app:destination="@id/viewRecipeFragment"/>
     </fragment>
 
     <!-- NewPostFragment -->
@@ -77,6 +77,13 @@
         <action
             android:id="@+id/action_newPostFragment_to_myRecipesFragment"
             app:destination="@id/myRecipesFragment"
+            app:popUpTo="@id/myRecipesFragment"
+            app:popUpToInclusive="false" />
+
+        <!-- Navigation to NewPostFragment itself (refresh) -->
+        <action
+            android:id="@+id/action_newPostFragment_to_newPostFragment"
+            app:destination="@id/newPostFragment"
             app:popUpTo="@id/newPostFragment"
             app:popUpToInclusive="true" />
     </fragment>
@@ -95,7 +102,7 @@
         android:label="Search">
         <action
             android:id="@+id/action_searchFragment_to_viewRecipeFragment"
-            app:destination="@+id/viewRecipeFragment"/>
+            app:destination="@id/viewRecipeFragment"/>
     </fragment>
 
     <!-- ViewRecipeFragment -->

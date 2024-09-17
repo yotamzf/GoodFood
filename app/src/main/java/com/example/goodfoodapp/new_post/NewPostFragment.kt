@@ -26,7 +26,6 @@ import com.example.goodfoodapp.utils.showLoadingOverlay
 import com.example.goodfoodapp.utils.hideLoadingOverlay
 import com.example.goodfoodapp.viewmodels.RecipeViewModel
 import com.example.goodfoodapp.viewmodels.RecipeViewModelFactory
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
@@ -54,7 +53,7 @@ class NewPostFragment : Fragment() {
             selectedImageUri = result.data?.data
             selectedImageUri?.let { uri ->
                 binding.ivRecipeImage.setImageURI(uri)
-                saveImageLocally(uri)
+                saveImageLocally(uri)  // Save the image locally
                 hasChanged = true
             }
         }
@@ -315,40 +314,12 @@ class NewPostFragment : Fragment() {
                 // Use the activity's view if the fragment's view is null
                 val rootView = view ?: requireActivity().findViewById(android.R.id.content)
                 Snackbar.make(rootView, "Changes discarded", Snackbar.LENGTH_LONG).show()
-
-                // Navigate back to the previous screen
-//                findNavController().navigateUp()
             }
-            .setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss() // Dismiss the dialog and keep the user on the same fragment
-
-                // Determine where to navigate back to based on the current fragment
-                val navController = findNavController()
-                val currentDestination = navController.currentDestination?.id
-
-                when (currentDestination) {
-                    R.id.newPostFragment -> {
-                        navController.navigate(R.id.newPostFragment)
-                        // Stay on the New Post fragment
-                        val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
-                        bottomNavigationView.selectedItemId = R.id.nav_new_post
-                    }
-                    R.id.myRecipesFragment -> {
-                        // Explicitly navigate back to New Post fragment
-                        navController.navigate(R.id.newPostFragment)
-
-                        val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
-                        bottomNavigationView.selectedItemId = R.id.nav_new_post
-                    }
-                    else -> {
-                        // Handle any other case if needed
-                        val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
-                        bottomNavigationView.selectedItemId = R.id.nav_my_recipes
-                    }
-                }
+            .setNegativeButton("No") { _, _ ->
+                // Keep the user on the same fragment
+                findNavController().navigateUp()
             }
             .create()
             .show()
     }
-
 }
