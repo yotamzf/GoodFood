@@ -317,7 +317,7 @@ class NewPostFragment : Fragment() {
                 Snackbar.make(rootView, "Changes discarded", Snackbar.LENGTH_LONG).show()
 
                 // Navigate back to the previous screen
-                findNavController().navigateUp()
+//                findNavController().navigateUp()
             }
             .setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss() // Dismiss the dialog and keep the user on the same fragment
