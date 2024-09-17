@@ -18,7 +18,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.GoodFoodApp
-import com.example.goodfoodapp.authenticate.LogInViewModel
 import com.example.goodfoodapp.dal.services.ImgurApiService
 import com.example.goodfoodapp.databinding.FragmentNewPostBinding
 import com.example.goodfoodapp.models.Recipe
@@ -27,7 +26,6 @@ import com.example.goodfoodapp.utils.showLoadingOverlay
 import com.example.goodfoodapp.utils.hideLoadingOverlay
 import com.example.goodfoodapp.viewmodels.RecipeViewModel
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 import java.io.File
 import java.io.FileOutputStream
