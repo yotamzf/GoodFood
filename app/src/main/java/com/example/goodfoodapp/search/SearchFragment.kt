@@ -23,7 +23,6 @@ import com.example.goodfoodapp.my_recipes.RecipesAdapter
 import com.example.goodfoodapp.utils.hideLoadingOverlay
 import com.example.goodfoodapp.utils.showLoadingOverlay
 import com.example.goodfoodapp.viewmodels.SearchViewModel
-import com.example.goodfoodapp.viewmodels.SearchViewModelFactory
 import com.google.firebase.firestore.FirebaseFirestore
 
 class SearchFragment : Fragment() {
@@ -46,8 +45,8 @@ class SearchFragment : Fragment() {
         // Initialize ViewModel
         val recipeDao = AppDatabase.getInstance(requireContext()).recipeDao()
         val repository = RecipeRepository(recipeDao, FirebaseFirestore.getInstance())
-        val factory = SearchViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, factory)[SearchViewModel::class.java]
+        viewModel = ViewModelProvider(this)[SearchViewModel::class.java]
+        viewModel.initialize(repository)
 
         // Observe ViewModel
         observeViewModel()

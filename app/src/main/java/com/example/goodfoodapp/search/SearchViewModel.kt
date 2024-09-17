@@ -10,13 +10,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SearchViewModel(private val recipeRepository: RecipeRepository) : ViewModel() {
+class SearchViewModel() : ViewModel() {
+    private lateinit var recipeRepository: RecipeRepository
 
     private val _recipes = MutableLiveData<List<RecipeWithUser>>()
     val recipes: LiveData<List<RecipeWithUser>> get() = _recipes
 
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> get() = _isLoading
+
+    fun initialize(repository: RecipeRepository) {
+        this.recipeRepository = repository
+    }
 
     fun fetchAllRecipes() {
         _isLoading.value = true
