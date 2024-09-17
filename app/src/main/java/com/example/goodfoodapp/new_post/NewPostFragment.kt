@@ -65,6 +65,8 @@ class NewPostFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        requireActivity().window.statusBarColor = ContextCompat.getColor(requireContext(), R.color.green_background)
+
         // Show the loading spinner on fragment creation
         binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
 

@@ -10,6 +10,8 @@ import android.view.ViewGroup
 //import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageButton
+import androidx.core.content.ContentProviderCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -41,6 +43,7 @@ class SearchFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        requireActivity().window.statusBarColor = ContextCompat.getColor(requireContext(), R.color.green_background)
 
         // Initialize ViewModel
         viewModel = ViewModelProvider(this)[SearchViewModel::class.java]
