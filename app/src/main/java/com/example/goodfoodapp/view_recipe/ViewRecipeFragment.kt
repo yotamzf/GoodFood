@@ -1,6 +1,7 @@
 package com.example.goodfoodapp.view_recipe
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -58,9 +59,17 @@ class ViewRecipeFragment : Fragment() {
         recipeViewModel.recipe.observe(viewLifecycleOwner) { recipe ->
             if (recipe != null) {
                 // Display recipe data
-                displayRecipeData(recipe)
+                try {
+                    displayRecipeData(recipe)
+                } catch(e: Exception) {
+                    Log.d("ViewRecipe", "displayRecipeData")
+                }
                 // Fetch the user data once recipe data is available
-                loadUserData(recipe.userId)
+                try {
+                    loadUserData(recipe.userId)
+                } catch(e: Exception) {
+                    Log.d("ViewRecipe", "loadUserData")
+                }
             }
         }
     }
@@ -70,11 +79,18 @@ class ViewRecipeFragment : Fragment() {
         userViewModel.getUserById(userId)
         userViewModel.user.observe(viewLifecycleOwner) { user ->
             user?.let {
-                // Display user name and profile picture using Picasso
+                // Display user name
                 binding.tvUserName.text = user.name
-                Picasso.get().load(user.profilePic)
-                    .placeholder(R.drawable.ic_default_user_profile)
-                    .into(binding.ivUserPicture)
+
+                // Check if the profile picture URL is not empty or null
+                if (!user.profilePic.isNullOrEmpty()) {
+                    Picasso.get().load(user.profilePic)
+                        .placeholder(R.drawable.ic_default_user_profile)
+                        .into(binding.ivUserPicture)
+                } else {
+                    // Load a default profile picture if the URL is empty or null
+                    binding.ivUserPicture.setImageResource(R.drawable.ic_default_user_profile)
+                }
             }
         }
     }
@@ -85,12 +101,18 @@ class ViewRecipeFragment : Fragment() {
         binding.tvPublishDate.text = convertTimestampToDate(recipe.uploadDate)
         binding.tvContent.text = recipe.content
 
-        // Load recipe image using Picasso
-        Picasso.get()
-            .load(recipe.picture)
-            .placeholder(R.drawable.ic_recipe_placeholder)
-            .into(binding.ivRecipeImage)
+        // Check if the recipe picture URL is not empty or null
+        if (!recipe.picture.isNullOrEmpty()) {
+            Picasso.get()
+                .load(recipe.picture)
+                .placeholder(R.drawable.ic_recipe_placeholder)
+                .into(binding.ivRecipeImage)
+        } else {
+            // Load a default recipe image if the URL is empty or null
+            binding.ivRecipeImage.setImageResource(R.drawable.ic_recipe_placeholder)
+        }
     }
+
 
     // Convert timestamp to date format (helper function)
     private fun convertTimestampToDate(timestamp: Long): String {
