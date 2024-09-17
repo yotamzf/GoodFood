@@ -22,7 +22,7 @@ import com.example.goodfoodapp.models.RecipeWithUser
 import com.example.goodfoodapp.my_recipes.RecipesAdapter
 import com.example.goodfoodapp.utils.hideLoadingOverlay
 import com.example.goodfoodapp.utils.showLoadingOverlay
-import com.example.goodfoodapp.viewmodels.SearchViewModel
+import com.example.goodfoodapp.search.SearchViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 
 class SearchFragment : Fragment() {
