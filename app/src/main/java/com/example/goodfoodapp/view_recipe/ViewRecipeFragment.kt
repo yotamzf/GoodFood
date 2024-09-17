@@ -7,32 +7,26 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.navArgs
 import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.databinding.FragmentViewRecipeBinding
 import com.example.goodfoodapp.models.Recipe
 import com.example.goodfoodapp.viewmodels.RecipeViewModel
-import com.example.goodfoodapp.viewmodels.RecipeViewModelFactory
 import com.example.goodfoodapp.viewmodels.UserViewModel
-import com.example.goodfoodapp.viewmodels.UserViewModelFactory
 import com.squareup.picasso.Picasso
 
 class ViewRecipeFragment : Fragment() {
 
     private var _binding: FragmentViewRecipeBinding? = null
     private val binding get() = _binding!!
+    private lateinit var recipeViewModel: RecipeViewModel
+    private lateinit var userViewModel: UserViewModel
+
 
     // Get arguments passed via SafeArgs
     private val args: ViewRecipeFragmentArgs by navArgs()
-
-    // Initialize ViewModels for Recipe and User
-    private val recipeViewModel: RecipeViewModel by viewModels {
-        RecipeViewModelFactory((requireActivity().application as GoodFoodApp).recipeRepository)
-    }
-    private val userViewModel: UserViewModel by viewModels {
-        UserViewModelFactory((requireActivity().application as GoodFoodApp).userRepository)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,6 +38,10 @@ class ViewRecipeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Initialize ViewModel
+        recipeViewModel = ViewModelProvider(this)[RecipeViewModel::class.java]
+        userViewModel = ViewModelProvider(this)[UserViewModel::class.java]
 
         // Get the recipe ID passed as SafeArg
         val recipeId = args.recipeId

@@ -31,7 +31,7 @@ class LogIn : Fragment() {
         val loginButton = view.findViewById<Button>(R.id.btnLogin)
         val signUpTextView = view.findViewById<TextView>(R.id.tvSignUpPrompt)
 
-        // Initialize ViewModel without Factory
+        // Initialize ViewModel
         logInViewModel = ViewModelProvider(this)[LogInViewModel::class.java]
         logInViewModel.setContext(requireContext()) // Set the context after ViewModel is initialized
 

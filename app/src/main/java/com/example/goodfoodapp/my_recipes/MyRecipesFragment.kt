@@ -10,7 +10,10 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.R
+import com.example.goodfoodapp.dal.repositories.RecipeRepository
+import com.example.goodfoodapp.dal.repositories.UserRepository
 import com.example.goodfoodapp.databinding.FragmentMyRecipesBinding
 import com.example.goodfoodapp.models.Recipe
 import com.example.goodfoodapp.utils.hideLoadingOverlay
@@ -29,12 +32,13 @@ class MyRecipesFragment : Fragment() {
 
     private lateinit var binding: FragmentMyRecipesBinding
     private lateinit var recipesAdapter: RecipesAdapter
-    private lateinit var auth: FirebaseAuth
+    private var recipeRepository: RecipeRepository = GoodFoodApp.instance.recipeRepository
+    private var auth: FirebaseAuth = GoodFoodApp.instance.firebaseAuth
 
-    // Access the RecipeRepository from GoodFoodApp
-    private val recipeRepository by lazy {
-        (requireActivity().application as com.example.goodfoodapp.GoodFoodApp).recipeRepository
-    }
+//    // Access the RecipeRepository from GoodFoodApp
+//    private val recipeRepository by lazy {
+//        (requireActivity().application as com.example.goodfoodapp.GoodFoodApp).recipeRepository
+//    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,8 +50,6 @@ class MyRecipesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        auth = FirebaseAuth.getInstance()
 
         // Show the loading spinner and blur effect
         binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()

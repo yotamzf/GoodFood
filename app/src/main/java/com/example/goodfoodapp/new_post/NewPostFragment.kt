@@ -18,6 +18,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.goodfoodapp.R
 import com.example.goodfoodapp.GoodFoodApp
+import com.example.goodfoodapp.authenticate.LogInViewModel
 import com.example.goodfoodapp.dal.services.ImgurApiService
 import com.example.goodfoodapp.databinding.FragmentNewPostBinding
 import com.example.goodfoodapp.models.Recipe
@@ -25,7 +26,6 @@ import com.example.goodfoodapp.utils.Validator
 import com.example.goodfoodapp.utils.showLoadingOverlay
 import com.example.goodfoodapp.utils.hideLoadingOverlay
 import com.example.goodfoodapp.viewmodels.RecipeViewModel
-import com.example.goodfoodapp.viewmodels.RecipeViewModelFactory
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
@@ -74,9 +74,7 @@ class NewPostFragment : Fragment() {
         binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
 
         // Initialize ViewModel
-        val repository = (activity?.application as GoodFoodApp).recipeRepository
-        val factory = RecipeViewModelFactory(repository)
-        recipeViewModel = ViewModelProvider(this, factory)[RecipeViewModel::class.java]
+        recipeViewModel = ViewModelProvider(this)[RecipeViewModel::class.java]
 
         // Set the Imgur API Service from the GoodFoodApp
         val imgurApiService = (activity?.application as GoodFoodApp).imgurApiService
@@ -229,7 +227,7 @@ class NewPostFragment : Fragment() {
 
 
     private fun submitRecipe(imageUrl: String) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = GoodFoodApp.instance.firebaseAuth.currentUser?.uid ?: return
         val title = binding.etTitle.text.toString()
         val content = binding.etContent.text.toString()
 

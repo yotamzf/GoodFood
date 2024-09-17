@@ -22,7 +22,7 @@ class SignUp : Fragment() {
     ): View? {
         val binding = FragmentSignUpBinding.inflate(inflater, container, false)
 
-        // Initialize ViewModel without Factory
+        // Initialize ViewModel
         signUpViewModel = ViewModelProvider(this)[SignUpViewModel::class.java]
         signUpViewModel.setContext(requireContext())
 

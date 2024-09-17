@@ -25,12 +25,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize Firebase Auth
-        auth = FirebaseAuth.getInstance()
-
-        // Initialize UserRepository using the already initialized instance in GoodFoodApp
-        val goodFoodApp = application as GoodFoodApp
-        userRepository = goodFoodApp.userRepository
+        auth = GoodFoodApp.instance.firebaseAuth
+        userRepository = GoodFoodApp.instance.userRepository
 
         fetchAndSaveUsers()
 

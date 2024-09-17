@@ -4,13 +4,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.goodfoodapp.GoodFoodApp
 import com.example.goodfoodapp.models.Recipe
 import com.example.goodfoodapp.dal.repositories.RecipeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class RecipeViewModel(private val repository: RecipeRepository) : ViewModel() {
+class RecipeViewModel() : ViewModel() {
+    private val repository: RecipeRepository = GoodFoodApp.instance.recipeRepository
 
     // LiveData for individual recipe
     private val _recipe = MutableLiveData<Recipe>()

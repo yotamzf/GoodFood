@@ -62,9 +62,8 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
         requireActivity().window.statusBarColor = ContextCompat.getColor(requireContext(), R.color.green_background)
 
         // Initialize Firebase Auth and UserRepository
-        auth = FirebaseAuth.getInstance()
-        val userDao = AppDatabase.getInstance(requireContext()).userDao()
-        userRepository = UserRepository(userDao, FirebaseFirestore.getInstance())
+        auth = GoodFoodApp.instance.firebaseAuth
+        userRepository = GoodFoodApp.instance.userRepository
 
         val user = auth.currentUser
         user?.let {
