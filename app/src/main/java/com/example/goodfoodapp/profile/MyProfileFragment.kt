@@ -88,6 +88,8 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
             user?.let {
                 // Show spinner while saving data
                 binding.root.findViewById<View>(R.id.loading_overlay)?.showLoadingOverlay()
+                disableButtons()
+                toggleNameEdit()
                 saveUserData(it.uid)
             }
         }
@@ -195,6 +197,10 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
         if (hasNameChanged || hasImageChanged) {
             enableButtons()
         } else {
+            disableButtons()
+        }
+
+        if (binding.nameEdit.text.toString().trim() == "") {
             disableButtons()
         }
     }
