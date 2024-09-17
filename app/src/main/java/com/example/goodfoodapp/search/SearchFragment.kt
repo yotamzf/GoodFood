@@ -107,6 +107,15 @@ class SearchFragment : Fragment() {
     private fun observeViewModel() {
         viewModel.recipes.observe(viewLifecycleOwner) { recipes ->
             recipesAdapter.submitList(recipes)
+
+            // Show "No recipes found" message if the list is empty
+            if (recipes.isEmpty()) {
+                binding.tvNoRecipes.visibility = View.VISIBLE
+                binding.rvSearchResults.visibility = View.GONE
+            } else {
+                binding.tvNoRecipes.visibility = View.GONE
+                binding.rvSearchResults.visibility = View.VISIBLE
+            }
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
@@ -117,6 +126,7 @@ class SearchFragment : Fragment() {
             }
         }
     }
+
 
     private fun viewRecipe(recipe: RecipeWithUser) {
         val action = SearchFragmentDirections.actionSearchFragmentToViewRecipeFragment(recipe.recipeId)
