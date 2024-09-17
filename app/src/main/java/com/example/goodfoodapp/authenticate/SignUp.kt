@@ -19,7 +19,10 @@ class SignUp : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
+
     ): View? {
+        requireActivity().window.statusBarColor = ContextCompat.getColor(requireContext(), R.color.green_background)
+
         val binding = FragmentSignUpBinding.inflate(inflater, container, false)
 
         // Initialize ViewModel
