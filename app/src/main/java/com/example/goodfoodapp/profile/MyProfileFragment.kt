@@ -226,7 +226,7 @@ class MyProfileFragment : Fragment(), UnsavedChangesListener {
                 Snackbar.make(rootView, "Changes discarded", Snackbar.LENGTH_LONG).show()
 
                 // Navigate back to the previous screen
-                onDiscardChanges()
+//                onDiscardChanges()
             }
             .setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss() // Dismiss the dialog and keep the user on the same fragment
