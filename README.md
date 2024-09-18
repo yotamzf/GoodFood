@@ -2,7 +2,7 @@
 
 A web application that allows users share and find recipes.
 
-![<img src="app/src/main/res/drawable/ic_goodfood_logo.png" width="25" height="25"/>](app/src/main/res/drawable/ic_goodfood_logo.png)
+<p align="center"> <img src="app/src/main/res/drawable/ic_goodfood_logo.png" width="200"> <img src="app/src/main/res/drawable/ic_goodfood_logo.png" width="200"> </p>
 
 ## Table of Contents
 1. [Fragments](#fragments)
