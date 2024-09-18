@@ -39,7 +39,5 @@ A web application that allows users share and find recipes.
 ## Authors 📝
 * **Hanna Sofer** - *Developer*
 * **Yotam Zeevi Federman** - *Developer*
- 
-![<img src="backend/src/data/jupyter-notebooks/example_model.png" width="25" height="25"/>](backend/src/data/jupyter-notebooks/example_model.png)
 
 
