@@ -1,6 +1,6 @@
 # GoodFood
 
-A web application that allows users share and find recipes.
+An android application that allows users share and find recipes.
 
 <p align="center"> <img src="app/src/main/res/drawable/ic_goodfood_logo.png" width="200">
 
